@@ -2,26 +2,28 @@ import ply.lex as lex
 
 # TODO'S
 """
-- Tratar dos casos específicos do ':' e '='
+- Acrescentámos os tokens (for, to, do) e literals (+, -, *, /)
+- num_real
+- Falta tratar de :=
 """
 
-literals = [';', ',', '(', ')', '.']
+literals = [';', ',', '(', ')', '.', '+', '-', '*', '/']
 
 reserved = {
     "program" : "PROGRAM",
-    "var" : "VAR",
     "begin" : "BEGIN",
     "end" : "END",
     "for" : "FOR",
-    "array" : "ARRAY",
-    "integer" : "INTEGER",
-    "writeln" : "WRITELN"
+    "to" : "TO",
+    "do" : "DO"
 }
 
 # Tokens
 tokens = [
     'identifier',  # Adiciona o token para identificadores
-    'string'
+    'string',
+    'num_int'
+    # 'num_real'
 ] + list(reserved.values())  # Adiciona as palavras reservadas como tokens
 
 # Regras para tokens
@@ -32,7 +34,7 @@ def t_identifier(t):
     return t
 
 def t_string(t):
-    r'\'([^\'])*?\''
+    r'\'.*?\''
     t.value = t.value[1:-1]
     return t
 
@@ -43,3 +45,10 @@ def t_error(t):
     t.lexer.skip(1)
 
 lexer = lex.lex()
+
+import sys
+
+for linha in sys.stdin:
+    lexer.input(linha)
+    for tok in lexer:
+        print(tok)
