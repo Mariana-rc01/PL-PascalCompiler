@@ -1,0 +1,17 @@
+P = {
+    Program : Header Content '.'
+
+    Header : PROGRAM identifier ListArgs ';'
+
+    Content : BEGIN ListStatement END
+
+    ListStatement : ListStatement Statement
+        | Statement
+
+    Statement : identifier '(' ListArgs ')' ';'
+
+    ListArgs : ListArgs ',' Arg
+            | Arg
+
+    Arg : string
+}
