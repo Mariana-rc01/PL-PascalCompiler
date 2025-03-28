@@ -6,12 +6,28 @@ P = {
     Content : BEGIN ListStatement END
 
     ListStatement : ListStatement Statement
-        | Statement
+                  | Statement
 
-    Statement : identifier '(' ListArgs ')' ';'
+    # falta definir estes statements
+    Statement : ForStatement
+              | ProcedureFunctionStatement
+              | VariableStatement
 
+    ProcedureFunctionStatement: identifier '(' ListArgs ')' ';'
+
+    # pode não receber args
     ListArgs : ListArgs ',' Arg
-            | Arg
+             | Arg
 
     Arg : string
+
+    Constant : UnsignedNumber
+             | Sign UnsignedNumber
+             | string
+
+    UnsignedNumber : num_int
+                   | num_real
+
+    Sign : '+'
+         | '-'
 }
