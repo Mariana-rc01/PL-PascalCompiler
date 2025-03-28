@@ -1,6 +1,20 @@
 import ply.yacc as yacc
 from lex import tokens, literals, reserved
 
+# Nota
+"""
+- Nas condições ter atenção a decidir se é lazy ou não.
+"""
+
+# TODO'S
+"""
+- Sinais para os números e transforma diretamente no sintático no número correto (-2 fica como p(0) = 0-2)
+- num_real
+- Literals adicionados
+- Modular Statements
+- Definição para constantes e var
+"""
+
 """
 P = {
     Program : Header Content '.'
