@@ -1,10 +1,5 @@
 import ply.lex as lex
 
-# TODO'S
-"""
-- Acrescentámos os tokens (for, to, do) e literals (+, -, *, /)
-"""
-
 literals = [';', ',', '(', ')', '.', '+', '-', '*', '/', '[', ']']
 
 reserved = {

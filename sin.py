@@ -9,8 +9,6 @@ from lex import tokens, literals, reserved
 # TODO'S
 """
 - Sinais para os números (done) e transforma diretamente no sintático no número correto (-2 fica como p(0) = 0-2)
-- num_real -> done
-- Literals adicionados
 - Modular Statements
 - Definição para constantes e var
 """
