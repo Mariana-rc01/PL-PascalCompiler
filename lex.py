@@ -5,7 +5,7 @@ import ply.lex as lex
 - Acrescentámos os tokens (for, to, do) e literals (+, -, *, /)
 """
 
-literals = [';', ',', '(', ')', '.', '+', '-', '*', '/']
+literals = [';', ',', '(', ')', '.', '+', '-', '*', '/', '[', ']']
 
 reserved = {
     "program" : "PROGRAM",
@@ -13,7 +13,17 @@ reserved = {
     "end" : "END",
     "for" : "FOR",
     "to" : "TO",
-    "do" : "DO"
+    "do" : "DO",
+    "and": "AND",
+    "or" : "OR",
+    "if" : "IF",
+    "then" : "THEN",
+    "else" : "ELSE",
+    "downto" : "DOWNTO",
+    "mod" : "MOD",
+    "div" : "DIV",
+    "not" : "NOT",
+    "while" : "WHILE"
 }
 
 # Tokens
@@ -26,7 +36,7 @@ tokens = [
     'COLON',
     'GREATER_THAN',
     'LESS_THAN',
-    'NOT_EQUAL'
+    'NOT_EQUAL',
     'GREATER_THAN_EQUAL',
     'LESS_THAN_EQUAL',
     'num_real'
@@ -94,9 +104,3 @@ def t_error(t):
 
 lexer = lex.lex()
 
-import sys
-
-for linha in sys.stdin:
-    lexer.input(linha)
-    for tok in lexer:
-        print(tok)

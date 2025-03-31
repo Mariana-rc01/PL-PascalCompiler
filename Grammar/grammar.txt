@@ -59,12 +59,12 @@ P = {
         | NOT_EQUAL
         | GREATER_THAN_EQUAL
         | LESS_THAN_EQUAL
-    
+
     SimpleExpression : Sign Term SecondPriorityOperator SimpleExpression
         | Term SecondPriorityOperator SimpleExpression
         | Term
 
-    SecondPriorityOperator : '+' 
+    SecondPriorityOperator : '+'
         | '-'
         | OR
 

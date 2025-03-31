@@ -61,7 +61,7 @@ def p_ProcedureStatement(p):
     "ProcedureStatement : identifier '(' ListArgs ')'"
 
 def p_ProcedureStatement_identifier(p):
-    "ProcedureStatement : identifier '('')'"
+    "ProcedureStatement : identifier '(' ')'"
 
 def p_ListArgs(p):
     "ListArgs : ListArgs ',' Arg"
@@ -141,7 +141,7 @@ def p_RelationalOperator_LESS_THAN_EQUAL(p):
 def p_SimpleExpression(p):
     "SimpleExpression : Sign Term SecondPriorityOperator SimpleExpression"
 
-def p_SimpleExpression_Term(p):
+def p_SimpleExpression_List(p):
     "SimpleExpression : Term SecondPriorityOperator SimpleExpression"
 
 def p_SimpleExpression_Term(p):
@@ -205,7 +205,7 @@ def p_FunctionDesignator(p):
     "FunctionDesignator : identifier '(' ListArgs ')'"
 
 def p_FunctionDesignator_identifier(p):
-    "FunctionDesignator : identifier '('')'"
+    "FunctionDesignator : identifier '(' ')'"
 
 def p_UnsignedConstant(p):
     "UnsignedConstant : UnsignedNumber"
