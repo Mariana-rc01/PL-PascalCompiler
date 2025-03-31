@@ -84,14 +84,12 @@ P = {
         | Variable
         | UnsignedConstant
         | FunctionDesignator
-        | identifier
         | NOT Factor
 
     FunctionDesignator : identifier '(' ListArgs ')'
         | identifier '('')'
 
     UnsignedConstant : UnsignedNumber
-        | identifier
         | string
 
     Constant : UnsignedNumber

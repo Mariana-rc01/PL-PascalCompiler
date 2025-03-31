@@ -67,17 +67,18 @@ def p_ListArgs(p):
 def p_ListArgs_Arg(p):
     "ListArgs : Arg"
 
-def p_Arg(p):
-    "Arg : identifier"
+#def p_Arg(p):
+#    "Arg : identifier"
 
+# a Expression engloba o identifier, Variable e string, então dava warning de reduce/reduce
 def p_Arg_Expression(p):
     "Arg : Expression"
 
-def p_Arg_Variable(p):
-    "Arg : Variable"
+#def p_Arg_Variable(p):
+#    "Arg : Variable"
 
-def p_Arg_string(p):
-    "Arg : string"
+#def p_Arg_string(p):
+#    "Arg : string"
 
 def p_StructeredStatement(p):
     "StructeredStatement : CompoundStatement"
@@ -94,7 +95,7 @@ def p_ConditionalStatement(p):
 def p_IfStatement(p):
     "IfStatement : IF Expression THEN Statement"
 
-def p_IfStatement_IF(p):
+def p_IfStatement_ELSE(p):
     "IfStatement : IF Expression THEN Statement ELSE Statement"
 
 def p_RepetitiveStatement(p):
@@ -193,9 +194,6 @@ def p_Factor_UnsignedConstant(p):
 def p_Factor_FunctionDesignator(p):
     "Factor : FunctionDesignator"
 
-def p_Factor_identifier(p):
-    "Factor : identifier"
-
 def p_Factor_NOT(p):
     "Factor : NOT Factor"
 
@@ -207,9 +205,6 @@ def p_FunctionDesignator_identifier(p):
 
 def p_UnsignedConstant(p):
     "UnsignedConstant : UnsignedNumber"
-
-def p_UnsignedConstant_identifier(p):
-    "UnsignedConstant : identifier"
 
 def p_UnsignedConstant_string(p):
     "UnsignedConstant : string"
