@@ -39,9 +39,48 @@ def p_ListH_identifier(p):
     #print(f"Debug: ListH_identifier -> {p[0]}")
 
 def p_Content(p):
-    "Content : CompoundStatement"
+    "Content : Declarations CompoundStatement"
+    p[0] = p[1] + p[2]
+    print(f"Debug: Content -> {p[0]}")
+
+def p_Declarations(p):
+    "Declarations : Declarations VariableDeclarationPart"
+    p[0] = p[1] + p[2]
+    print(f"Debug: Declarations -> {p[0]}")
+
+def p_Declarations_empty(p):
+    "Declarations : "
+    p[0] = []
+    print(f"Debug: Declaration_Empty -> {p[0]}")
+
+def p_VariableDeclarationPart(p):
+    "VariableDeclarationPart : VAR ListVarsDeclaration"
+    p[0] = p[2]
+    print(f"Debug: VariableDeclarationPart -> {p[0]}")
+
+def p_ListVarsDeclaration(p):
+    "ListVarsDeclaration : ListVarsDeclaration ElemVarsDeclaration ';'"
+    p[0] = p[1] + p[2]
+    print(f"Debug: ListVarsDeclaration -> {p[0]}")
+
+def p_ListVarsDeclaration_ElemVarsDeclaration(p):
+    "ListVarsDeclaration : ElemVarsDeclaration ';'"
     p[0] = p[1]
-    #print(f"Debug: Content -> {p[0]}")
+    print(f"Debug: ListVarDeclation_ElemVarsDeclarion -> {p[0]}")
+
+def p_ElemVarsDeclaration(p):
+    "ElemVarsDeclaration : IdentifierList COLON identifier"
+    p[0] = p[1] + [p[3]]
+    print(f"Debug: ElemVarsDeclaration -> {p[0]}")
+
+def p_IdentifierList(p):
+    "IdentifierList : IdentifierList ',' identifier"
+    p[0] = p[1] + [p[3]]
+    print(f"Debug: IdentifierList -> {p[0]}")
+
+def p_IdentifierList_identifier(p):
+    "IdentifierList : identifier"
+    p[0] = [p[1]]
 
 def p_CompoundStatement(p):
     "CompoundStatement : BEGIN ListStatement END"

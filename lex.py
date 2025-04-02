@@ -18,7 +18,10 @@ reserved = {
     "mod" : "MOD",
     "div" : "DIV",
     "not" : "NOT",
-    "while" : "WHILE"
+    "while" : "WHILE",
+    "var" : "VAR",
+    "array" : "ARRAY",
+    "of" : "OF"
 }
 
 # Tokens
@@ -34,7 +37,8 @@ tokens = [
     'NOT_EQUAL',
     'GREATER_THAN_EQUAL',
     'LESS_THAN_EQUAL',
-    'num_real'
+    'num_real',
+    'comment'
 ] + list(reserved.values())  # Adiciona as palavras reservadas como tokens
 
 # Regras para tokens
@@ -90,6 +94,10 @@ def t_LESS_THAN(t):
 def t_NOT_EQUAL(t):
     r'<>'
     return t
+
+def t_comment(t):
+    r'\(\*(.|\n)*?\*\)|{(.|\n)*?}'
+    pass
 
 t_ignore = " \t\n"
 

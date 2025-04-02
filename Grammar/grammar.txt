@@ -1,107 +1,17 @@
 P = {
-    Program : Header Content '.'
+    Content : Declarations CompoundStatement
 
-    Header : PROGRAM identifier '(' ListH ')' ';'
-        | PROGRAM identifier ';'
+    Declarations : Declarations VariableDeclarationPart
+        | Empty
 
-    ListH : ListH ',' identifier
+    VariableDeclarationPart : VAR ListVarsDeclaration
+
+    ListVarsDeclaration : ListVarsDeclaration ';' ElemVarsDeclaration
+        | ElemVarsDeclaration
+
+    ElemVarsDeclaration : IdentifierList ':' identifier
+
+    IdentifierList : IdentifierList identifier
         | identifier
 
-    Content : CompoundStatement
-
-    CompoundStatement : BEGIN ListStatement END
-
-    ListStatement : ListStatement Statement ';'
-        | Statement ';'
-
-    Statement : SimpleStatement
-        | StructeredStatement
-
-    SimpleStatement : AssignmentStatement
-        | ProcedureStatement
-
-    AssignmentStatement : Variable ASSIGN Expression
-
-    ProcedureStatement : identifier '(' ListArgs ')'
-        | identifier '('')'
-
-    ListArgs : ListArgs ',' Arg
-        | Arg
-
-    Arg : identifier
-        | Expression
-        | Variable
-        | string
-
-    StructeredStatement : CompoundStatement
-        | ConditionalStatement
-        | RepetitiveStatement
-
-    ConditionalStatement : IfStatement
-
-    IfStatement : IF Expression THEN Statement
-        | IF Expression THEN Statement ELSE Statement
-
-    RepetitiveStatement : WhileStatement
-        | ForStatement
-
-    WhileStatement : WHILE Expression DO Statement
-
-    ForStatement : FOR identifier ASSIGN Expression TO Expression DO Statement
-        | FOR identifier ASSIGN Expression DOWNTO Expression DO Statement
-
-    Expression : SimpleExpression RelationalOperator Expression
-        | SimpleExpression
-
-    RelationalOperator : EQUAL
-        | GREATER_THAN
-        | LESS_THAN
-        | NOT_EQUAL
-        | GREATER_THAN_EQUAL
-        | LESS_THAN_EQUAL
-
-    SimpleExpression : Sign Term SecondPriorityOperator SimpleExpression
-        | Term SecondPriorityOperator SimpleExpression
-        | Term
-
-    SecondPriorityOperator : '+'
-        | '-'
-        | OR
-
-    Sign : '+'
-        | '-'
-
-    Term : Factor FirstPriorityOperator Term
-        | Factor
-
-    FirstPriorityOperator : '*'
-        | '/'
-        | DIV
-        | MOD
-        | AND
-
-    Factor : '(' Expression ')'
-        | Variable
-        | UnsignedConstant
-        | FunctionDesignator
-        | NOT Factor
-
-    FunctionDesignator : identifier '(' ListArgs ')'
-        | identifier '('')'
-
-    UnsignedConstant : UnsignedNumber
-        | string
-
-    Constant : UnsignedNumber
-             | Sign UnsignedNumber
-             | string
-
-    UnsignedNumber : num_int
-                   | num_real
-
-    Variable : identifier
-        | identifier '[' ListExpressions ']'
-
-    ListExpressions : ListExpressions ',' Expression
-        | Expression
 }
