@@ -41,46 +41,101 @@ def p_ListH_identifier(p):
 def p_Content(p):
     "Content : Declarations CompoundStatement"
     p[0] = p[1] + p[2]
-    print(f"Debug: Content -> {p[0]}")
+    #print(f"Debug: Content -> {p[0]}")
 
-def p_Declarations(p):
+def p_Declarations_variable(p):
     "Declarations : Declarations VariableDeclarationPart"
     p[0] = p[1] + p[2]
-    print(f"Debug: Declarations -> {p[0]}")
+    #print(f"Debug: Declarations_variable -> {p[0]}")
 
+def p_Declarations_procedure(p):
+    "Declarations : Declarations ProcedureDeclarationPart"
+    p[0] = p[1] + p[2]
+    #print(f"Debug: Declarations_procedure -> {p[0]}")
+
+def p_Declarations_function(p):
+    "Declarations : Declarations FunctionDeclarationPart"
+    p[0] = p[1] + p[2]
+    #print(f"Debug: Declarations_function -> {p[0]}")
+1
 def p_Declarations_empty(p):
     "Declarations : "
     p[0] = []
-    print(f"Debug: Declaration_Empty -> {p[0]}")
+    #print(f"Debug: Declaration_empty -> {p[0]}")
 
 def p_VariableDeclarationPart(p):
     "VariableDeclarationPart : VAR ListVarsDeclaration"
     p[0] = p[2]
-    print(f"Debug: VariableDeclarationPart -> {p[0]}")
+    #print(f"Debug: VariableDeclarationPart -> {p[0]}")
 
 def p_ListVarsDeclaration(p):
     "ListVarsDeclaration : ListVarsDeclaration ElemVarsDeclaration ';'"
     p[0] = p[1] + p[2]
-    print(f"Debug: ListVarsDeclaration -> {p[0]}")
+    #print(f"Debug: ListVarsDeclaration -> {p[0]}")
 
 def p_ListVarsDeclaration_ElemVarsDeclaration(p):
     "ListVarsDeclaration : ElemVarsDeclaration ';'"
     p[0] = p[1]
-    print(f"Debug: ListVarDeclation_ElemVarsDeclarion -> {p[0]}")
+    #print(f"Debug: ListVarDeclation_ElemVarsDeclarion -> {p[0]}")
 
-def p_ElemVarsDeclaration(p):
+def p_ElemVarsDeclaration_identifier(p):
     "ElemVarsDeclaration : IdentifierList COLON identifier"
     p[0] = p[1] + [p[3]]
-    print(f"Debug: ElemVarsDeclaration -> {p[0]}")
+    #print(f"Debug. AQUI: ElemVarsDeclaration_identifier -> {p[0]}")
+
+def p_ElemVarsDeclaration_array(p):
+    "ElemVarsDeclaration : IdentifierList COLON Array"
+    p[0] = p[1] + [p[3]]
+    #print(f"Debug: ElemVarsDeclaration_array -> {p[0]}")
+
+def p_Array(p):
+    "Array : ARRAY '[' Constant '.' '.' Constant ']' OF identifier"
+    p[0] = p[3] + p[6] + p[9]
+    #print(f"Debug: Array -> {p[0]}")
 
 def p_IdentifierList(p):
     "IdentifierList : IdentifierList ',' identifier"
     p[0] = p[1] + [p[3]]
-    print(f"Debug: IdentifierList -> {p[0]}")
+    #print(f"Debug: IdentifierList -> {p[0]}")
 
 def p_IdentifierList_identifier(p):
     "IdentifierList : identifier"
     p[0] = [p[1]]
+
+def p_ProcedureDeclarationPart(p):
+    "ProcedureDeclarationPart : PROCEDURE identifier ListParametersDeclaration ';' Content ';'"
+    p[0] = [p[2]] + p[3] + p[5]
+
+def p_FunctionDeclarationPart(p):
+    "FunctionDeclarationPart : FUNCTION identifier ListParametersDeclaration COLON identifier ';' Content ';'"
+    p[0] = [p[2]] + p[3] + [p[5]] + p[7]
+
+def p_ListParametersDeclaration(p):
+    "ListParametersDeclaration : '(' ListParameters ')'"
+    p[0] = p[2]
+
+def p_ListParametersDeclaration_empty(p):
+    "ListParametersDeclaration : "
+    p[0] = []
+
+def p_ListParameters(p):
+    "ListParameters : ListParameters ',' ElemParameter"
+    p[0] = p[1] + p[2]
+    print(f"Debug: ListParameters -> {p[0]}")
+
+def p_ListParameters_ElemParameter(p):
+    "ListParameters : ElemParameter"
+    p[0] = p[1]
+    #print(f"Debug: ListParameters_ElemParameter -> {p[0]}")
+
+def p_ElemParameter(p):
+    "ElemParameter : IdentifierList COLON ARRAY OF identifier"
+    p[0] = p[1] + [p[5]]
+
+def p_ListParameters_ElemParameter_identifier(p):
+    "ElemParameter : IdentifierList COLON identifier"
+    p[0] = p[1] + [p[3]]
+    print(f"Debug. AQUI: ElemVarsDeclaration_identifier -> {p[0]}")
 
 def p_CompoundStatement(p):
     "CompoundStatement : BEGIN ListStatement END"
@@ -382,20 +437,25 @@ def p_UnsignedConstant_string(p):
     p[0] = p[1]
     #print(f"Debug: UnsignedConstant_string -> {p[0]}")
 
+def p_UnsignedConstant_char(p):
+    "UnsignedConstant : char"
+    p[0] = p[1]
+    #print(f"Debug: UnsignedConstant_char -> {p[0]}")
+
 def p_Constant(p):
-    "Constant : UnsignedNumber"
+    "Constant : num_int"
     p[0] = p[1]
     #print(f"Debug: Constant -> {p[0]}")
 
 def p_Constant_Sign(p):
-    "Constant : Sign UnsignedNumber"
+    "Constant : Sign num_int"
     p[0] = (p[1], p[2])
     #print(f"Debug: Constant_Sign -> {p[0]}")
 
-def p_Constant_string(p):
-    "Constant : string"
+def p_Constant_char(p):
+    "Constant : char"
     p[0] = p[1]
-    #print(f"Debug: Constant_string -> {p[0]}")
+    #print(f"Debug: Constant_char -> {p[0]}")
 
 def p_UnsignedNumber(p):
     "UnsignedNumber : num_int"

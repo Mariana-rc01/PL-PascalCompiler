@@ -4,6 +4,8 @@ literals = [';', ',', '(', ')', '.', '+', '-', '*', '/', '[', ']']
 
 reserved = {
     "program" : "PROGRAM",
+    "procedure" : "PROCEDURE",
+    "function" : "FUNCTION",
     "begin" : "BEGIN",
     "end" : "END",
     "for" : "FOR",
@@ -26,7 +28,8 @@ reserved = {
 
 # Tokens
 tokens = [
-    'identifier',  # Adiciona o token para identificadores
+    'identifier',
+    'char',
     'string',
     'num_int',
     'ASSIGN',
@@ -46,6 +49,11 @@ def t_identifier(t):
     r'[a-zA-Z_][a-zA-Z0-9_]*'
     # Verifica se a palavra está na lista de reservadas
     t.type = reserved.get(t.value.lower(), 'identifier')
+    return t
+
+def t_char(t):
+    r'\'[^\'\n]\''
+    t.value = t.value[1:-1]
     return t
 
 def t_string(t):
