@@ -1,24 +1,35 @@
 import ply.lex as lex
 
-# TODO'S
-"""
-- Acrescentámos os tokens (for, to, do) e literals (+, -, *, /)
-"""
-
-literals = [';', ',', '(', ')', '.', '+', '-', '*', '/']
+literals = [';', ',', '(', ')', '.', '+', '-', '*', '/', '[', ']']
 
 reserved = {
     "program" : "PROGRAM",
+    "procedure" : "PROCEDURE",
+    "function" : "FUNCTION",
     "begin" : "BEGIN",
     "end" : "END",
     "for" : "FOR",
     "to" : "TO",
-    "do" : "DO"
+    "do" : "DO",
+    "and": "AND",
+    "or" : "OR",
+    "if" : "IF",
+    "then" : "THEN",
+    "else" : "ELSE",
+    "downto" : "DOWNTO",
+    "mod" : "MOD",
+    "div" : "DIV",
+    "not" : "NOT",
+    "while" : "WHILE",
+    "var" : "VAR",
+    "array" : "ARRAY",
+    "of" : "OF"
 }
 
 # Tokens
 tokens = [
-    'identifier',  # Adiciona o token para identificadores
+    'identifier',
+    'char',
     'string',
     'num_int',
     'ASSIGN',
@@ -26,10 +37,11 @@ tokens = [
     'COLON',
     'GREATER_THAN',
     'LESS_THAN',
-    'NOT_EQUAL'
+    'NOT_EQUAL',
     'GREATER_THAN_EQUAL',
     'LESS_THAN_EQUAL',
-    'num_real'
+    'num_real',
+    'comment'
 ] + list(reserved.values())  # Adiciona as palavras reservadas como tokens
 
 # Regras para tokens
@@ -37,6 +49,11 @@ def t_identifier(t):
     r'[a-zA-Z_][a-zA-Z0-9_]*'
     # Verifica se a palavra está na lista de reservadas
     t.type = reserved.get(t.value.lower(), 'identifier')
+    return t
+
+def t_char(t):
+    r'\'[^\'\n]\''
+    t.value = t.value[1:-1]
     return t
 
 def t_string(t):
@@ -86,6 +103,10 @@ def t_NOT_EQUAL(t):
     r'<>'
     return t
 
+def t_comment(t):
+    r'\(\*(.|\n)*?\*\)|{(.|\n)*?}'
+    pass
+
 t_ignore = " \t\n"
 
 def t_error(t):
@@ -94,9 +115,3 @@ def t_error(t):
 
 lexer = lex.lex()
 
-import sys
-
-for linha in sys.stdin:
-    lexer.input(linha)
-    for tok in lexer:
-        print(tok)

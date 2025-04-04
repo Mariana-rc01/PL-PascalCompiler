@@ -1,33 +1,17 @@
 P = {
-    Program : Header Content '.'
+    Content : Declarations CompoundStatement
 
-    Header : PROGRAM identifier ListArgs ';'
+    Declarations : Declarations VariableDeclarationPart
+        | Empty
 
-    Content : BEGIN ListStatement END
+    VariableDeclarationPart : VAR ListVarsDeclaration
 
-    ListStatement : ListStatement Statement
-                  | Statement
+    ListVarsDeclaration : ListVarsDeclaration ';' ElemVarsDeclaration
+        | ElemVarsDeclaration
 
-    # falta definir estes statements
-    Statement : ForStatement
-              | ProcedureFunctionStatement
-              | VariableStatement
+    ElemVarsDeclaration : IdentifierList ':' identifier
 
-    ProcedureFunctionStatement: identifier '(' ListArgs ')' ';'
+    IdentifierList : IdentifierList identifier
+        | identifier
 
-    # pode não receber args
-    ListArgs : ListArgs ',' Arg
-             | Arg
-
-    Arg : string
-
-    Constant : UnsignedNumber
-             | Sign UnsignedNumber
-             | string
-
-    UnsignedNumber : num_int
-                   | num_real
-
-    Sign : '+'
-         | '-'
 }
