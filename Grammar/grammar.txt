@@ -1,17 +1,35 @@
 P = {
-    Content : Declarations CompoundStatement
+    Agenda : Cabecalho Conteudo
+    Cabecalho : DCA ListaAtributos DCF
+    ListaAtributos: ListaAtributo Atributo
+                  | Vazio
+    Atributo: id '=' vAtributo
 
-    Declarations : Declarations VariableDeclarationPart
-        | Empty
+    Conteudo : AGENDA_A ListaEntradas AGENDA_F
 
-    VariableDeclarationPart : VAR ListVarsDeclaration
+    ListaEntradas: ListaEntradas TipoEntrada
+                 | Vazio
 
-    ListVarsDeclaration : ListVarsDeclaration ';' ElemVarsDeclaration
-        | ElemVarsDeclaration
+    TipoEntrada : Entrada
+                | Grupo
 
-    ElemVarsDeclaration : IdentifierList ':' identifier
+    Entrada : Entrada_A Nome Email Telefone ENTRADA_F
 
-    IdentifierList : IdentifierList identifier
-        | identifier
+    Entrada_A : '<' ENTRADA_A ListaAtributos '>'
 
+    Nome : NOME_A string NOME_F
+    Email : EMAIL_A string EMAIL_F
+          | Vazio
+    Telefone : TELEFONE_A string TELEFONE_F
+
+    Grupo : Grupo_A ListaGrupo GRUPO_F
+
+    Grupo_A : '<' GRUPO_A ListaAtributos '>'
+
+    ListaGrupo : ListaGrupo ElemGrupo
+                | Vazio
+
+    ElemGrupo : Ref | TipoEntrada
+
+    Ref : REF_A ListaAtributos REF_F
 }
