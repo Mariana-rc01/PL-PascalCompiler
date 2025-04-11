@@ -23,7 +23,9 @@ reserved = {
     "while" : "WHILE",
     "var" : "VAR",
     "array" : "ARRAY",
-    "of" : "OF"
+    "of" : "OF",
+    "true" : "TRUE",
+    "false" : "FALSE"
 }
 
 # Tokens
@@ -40,8 +42,7 @@ tokens = [
     'NOT_EQUAL',
     'GREATER_THAN_EQUAL',
     'LESS_THAN_EQUAL',
-    'num_real',
-    'comment'
+    'num_real'
 ] + list(reserved.values())  # Adiciona as palavras reservadas como tokens
 
 # Regras para tokens
@@ -114,4 +115,3 @@ def t_error(t):
     t.lexer.skip(1)
 
 lexer = lex.lex()
-
