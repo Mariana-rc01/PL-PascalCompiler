@@ -23,7 +23,9 @@ reserved = {
     "while" : "WHILE",
     "var" : "VAR",
     "array" : "ARRAY",
-    "of" : "OF"
+    "of" : "OF",
+    "true" : "TRUE",
+    "false" : "FALSE"
 }
 
 # Tokens
@@ -114,4 +116,3 @@ def t_error(t):
     t.lexer.skip(1)
 
 lexer = lex.lex()
-

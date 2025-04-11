@@ -1,4 +1,3 @@
-# tree_drawer.py
 import sys
 import tkinter as tk
 from astree import ASTNode
@@ -157,15 +156,7 @@ if __name__ == '__main__':
     if input_text:
         root = parse_ast(input_text)
     else:
-        root = ASTNode("Program", [
-            ASTNode("Header", [ASTNode("Identifier", value="MyProgram")]),
-            ASTNode("Content", [
-                ASTNode("Assignment", [
-                    ASTNode("Variable", value="x"),
-                    ASTNode("Expression", [ASTNode("UnsignedConstant", value="5")])
-                ])
-            ])
-        ])
+        print("No input has been detected.")
     if root is None:
         print("No tree was found in the input.")
         sys.exit(1)

@@ -22,17 +22,3 @@ class ASTNode:
             else:
                 rep += "  " * (level + 1) + str(child) + "\n"
         return rep
-
-if __name__ == '__main__':
-    # Example usage and debugging of the AST
-    node = ASTNode("Program", [
-        ASTNode("Header", value="MyProgram"),
-        ASTNode("Content", [
-            ASTNode("VariableDeclaration", value="x: integer"),
-            ASTNode("Assignment", [
-                ASTNode("Variable", value="x"),
-                ASTNode("Expression", value="5")
-            ])
-        ])
-    ])
-    print(node)

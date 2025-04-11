@@ -1,4 +1,3 @@
-# sin.py
 import ply.yacc as yacc
 from lex import tokens, literals, reserved
 from astree import ASTNode
@@ -6,18 +5,18 @@ from astree import ASTNode
 # Regra Principal
 def p_Program(p):
     "Program : Header Content '.'"
-    p[0] = ASTNode("Program", [p[1], p[2]], value='.')
+    p[0] = ASTNode("Program", [p[1], p[2]])
     #print("Debug: Program ->")
     #print(p[0])
 
 # Cabeçalho do Programa
 def p_Header(p):
     "Header : PROGRAM identifier '(' ListH ')' ';'"
-    p[0] = ASTNode("Header", [ASTNode("Identifier", value=p[2]), p[4]], value="program header")
+    p[0] = ASTNode("Header", [ASTNode("Identifier", value=p[2]), p[4]])
     
 def p_Header_PROGRAM(p):
     "Header : PROGRAM identifier ';'"
-    p[0] = ASTNode("Header", [ASTNode("Identifier", value=p[2])], value="program header (simplificado)")
+    p[0] = ASTNode("Header", [ASTNode("Identifier", [ASTNode(p[2])])])
 
 def p_ListH(p):
     "ListH : ListH ',' identifier"
@@ -107,8 +106,16 @@ def p_ListParametersDeclaration(p):
     "ListParametersDeclaration : '(' ListParameters ')'"
     p[0] = p[2]
 
+def p_ListParametersDeclaration_VAR(p):
+    "ListParametersDeclaration : '(' VAR ListParameters ')'"
+    p[0] = p[3]
+
 def p_ListParametersDeclaration_empty(p):
     "ListParametersDeclaration : "
+    p[0] = ASTNode("Parameters", [])
+
+def p_ListParametersDeclaration_Listempty(p):
+    "ListParametersDeclaration : '(' ')'"
     p[0] = ASTNode("Parameters", [])
 
 def p_ListParameters(p):
@@ -181,6 +188,10 @@ def p_ProcedureStatement(p):
 
 def p_ProcedureStatement_identifier(p):
     "ProcedureStatement : identifier '(' ')'"
+    p[0] = ASTNode("ProcedureCall", [ASTNode("Identifier", value=p[1]), ASTNode("Args", [])])
+
+def p_ProcedureStatement_empty(p):
+    "ProcedureStatement : identifier"
     p[0] = ASTNode("ProcedureCall", [ASTNode("Identifier", value=p[1]), ASTNode("Args", [])])
 
 def p_ListArgs(p):
@@ -360,12 +371,24 @@ def p_Factor_NOT(p):
     "Factor : NOT Factor"
     p[0] = ASTNode("Not", [p[2]])
 
+def p_Factor_TRUE(p):
+    "Factor : TRUE"
+    p[0] = p[1]
+
+def p_Factor_FALSE(p):
+    "Factor : FALSE"
+    p[0] = p[1]
+
 def p_FunctionDesignator(p):
     "FunctionDesignator : identifier '(' ListArgs ')'"
     p[0] = ASTNode("FunctionCall", [ASTNode("Identifier", value=p[1]), p[3]])
 
 def p_FunctionDesignator_identifier(p):
     "FunctionDesignator : identifier '(' ')'"
+    p[0] = ASTNode("FunctionCall", [ASTNode("Identifier", value=p[1]), ASTNode("Args", [])])
+
+def p_FunctionDesignator_empty(p):
+    "FunctionDesignator : identifier"
     p[0] = ASTNode("FunctionCall", [ASTNode("Identifier", value=p[1]), ASTNode("Args", [])])
 
 # Constantes e Unsigned
