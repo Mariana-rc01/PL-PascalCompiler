@@ -8,7 +8,7 @@ var
  
 (* ***************************    adder    ********************************** *)
  
-procedure adder(var a,b : intarray);
+procedure adder(var a : intarray; var b : intarray);
 var
    i: integer;
  

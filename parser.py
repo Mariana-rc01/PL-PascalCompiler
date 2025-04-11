@@ -103,12 +103,24 @@ def p_FunctionDeclarationPart(p):
                                             p[7]])
 
 def p_ListParametersDeclaration(p):
-    "ListParametersDeclaration : '(' ListParameters ')'"
-    p[0] = p[2]
+    "ListParametersDeclaration : '(' ListOfListParameters ')'"
+    p[0] = ASTNode("ListParametersDeclaration", value=p[2])
 
-def p_ListParametersDeclaration_VAR(p):
-    "ListParametersDeclaration : '(' VAR ListParameters ')'"
-    p[0] = p[3]
+def p_ListOfListParameters(p):
+    "ListOfListParameters : ListOfListParameters ';' ListParameters"
+    p[0] = ASTNode("ListOfListParameters", [p[1], p[3]])
+
+def p_ListOfListParameters_VAR_R(p):
+    "ListOfListParameters : ListOfListParameters ';' VAR ListParameters"
+    p[0] = ASTNode("ListOfListParameters", [p[1], p[3]])
+
+def p_ListOfListParameters_single(p):
+    "ListOfListParameters : ListParameters"
+    p[0] = p[1]
+
+def p_ListOfListParameters_VAR(p):
+    "ListOfListParameters : VAR ListParameters"
+    p[0] = p[2]
 
 def p_ListParametersDeclaration_empty(p):
     "ListParametersDeclaration : "
@@ -385,10 +397,6 @@ def p_FunctionDesignator(p):
 
 def p_FunctionDesignator_identifier(p):
     "FunctionDesignator : identifier '(' ')'"
-    p[0] = ASTNode("FunctionCall", [ASTNode("Identifier", value=p[1]), ASTNode("Args", [])])
-
-def p_FunctionDesignator_empty(p):
-    "FunctionDesignator : identifier"
     p[0] = ASTNode("FunctionCall", [ASTNode("Identifier", value=p[1]), ASTNode("Args", [])])
 
 # Constantes e Unsigned

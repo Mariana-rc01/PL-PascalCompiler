@@ -42,8 +42,7 @@ tokens = [
     'NOT_EQUAL',
     'GREATER_THAN_EQUAL',
     'LESS_THAN_EQUAL',
-    'num_real',
-    'comment'
+    'num_real'
 ] + list(reserved.values())  # Adiciona as palavras reservadas como tokens
 
 # Regras para tokens
