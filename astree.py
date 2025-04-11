@@ -16,6 +16,8 @@ class ASTNode:
             rep += f": {self.value}"
         rep += "\n"
         for child in self.children:
+            if child is None:
+                continue
             # If the child is a string or number, convert to string; if it's a node, call __str__
             if isinstance(child, ASTNode):
                 rep += child.__str__(level + 1)
