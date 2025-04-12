@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request
-from astree import ASTNode
-from parser import parse_input
+from ASTree.astree import ASTNode
+from Compiler.parser import parse_input
 
 app = Flask(__name__)
 
@@ -19,7 +19,6 @@ def build_tree_json(node):
     return {"name": name, "children": children}
 
 def clean_code_input(code):
-    # Remove caracteres invisíveis ou inesperados
     return ''.join(c for c in code if c.isprintable() or c in '\n\t')
 
 @app.route('/', methods=['GET', 'POST'])
@@ -35,14 +34,12 @@ def index():
         code_input = code_input.replace('\r\n', '\n')
 
         try:
-            # Tenta processar o código
             ast_root = parse_input(code_input)
             if ast_root is not None:
                 tree_data = build_tree_json(ast_root)
             else:
                 error = "Syntax error. Please check your code."
         except Exception as e:
-            # Captura erros inesperados
             error = f"An error occurred: {str(e)}"
 
     return render_template('index.html', tree_data=tree_data, code=code_input, error=error)

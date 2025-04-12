@@ -1,6 +1,6 @@
 import sys
 import tkinter as tk
-from astree import ASTNode
+from ASTree.astree import ASTNode
 
 def parse_ast(text):
     """

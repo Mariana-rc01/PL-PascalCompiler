@@ -1,6 +1,6 @@
 import ply.yacc as yacc
-from lex import tokens, literals, reserved
-from astree import ASTNode
+from Compiler.lex import tokens, literals, reserved
+from ASTree.astree import ASTNode
 
 # Principal Rule
 def p_Program(p):
