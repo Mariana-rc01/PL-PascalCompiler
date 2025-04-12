@@ -89,16 +89,16 @@ def p_IdentifierList_identifier(p):
 # Procedure Declarations
 def p_ProcedureDeclarationPart(p):
     "ProcedureDeclarationPart : PROCEDURE identifier ListParametersDeclaration ';' Content ';'"
-    p[0] = ASTNode("ProcedureDeclaration", [ASTNode("Identifier", value=p[2]),
+    p[0] = ASTNode("ProcedureDeclaration", [ASTNode("Identifier", [p[2]]),
                                              p[3],
                                              p[5]])
 
 # Function Declarations
 def p_FunctionDeclarationPart(p):
     "FunctionDeclarationPart : FUNCTION identifier ListParametersDeclaration COLON identifier ';' Content ';'"
-    p[0] = ASTNode("FunctionDeclaration", [ASTNode("Identifier", value=p[2]),
+    p[0] = ASTNode("FunctionDeclaration", [ASTNode("Identifier", [p[2]]),
                                             p[3],
-                                            ASTNode("ReturnType", value=p[5]),
+                                            ASTNode("ReturnType", [p[5]]),
                                             p[7]])
 
 def p_ListParametersDeclaration(p):
@@ -174,20 +174,20 @@ def p_LastStatement_empty(p):
 
 def p_Statement(p):
     "Statement : SimpleStatement"
-    p[0] = p[1]
+    p[0] = ASTNode("Statement", [p[1]])
 
 def p_Statement_StructeredStatement(p):
     "Statement : StructeredStatement"
-    p[0] = p[1]
+    p[0] = ASTNode("Statement", [p[1]])
 
 # Simple Statement
 def p_SimpleStatement(p):
     "SimpleStatement : AssignmentStatement"
-    p[0] = p[1]
+    p[0] = ASTNode("SimpleStatement", [p[1]])
 
 def p_SimpleStatement_ProcedureStatement(p):
     "SimpleStatement : ProcedureStatement"
-    p[0] = p[1]
+    p[0] = ASTNode("SimpleStatement", [p[1]])
 
 def p_AssignmentStatement(p):
     "AssignmentStatement : Variable ASSIGN Expression"
@@ -207,33 +207,33 @@ def p_ProcedureStatement_empty(p):
 
 def p_ListArgs(p):
     "ListArgs : ListArgs ',' Arg"
-    p[0] = ASTNode("Args", p[1].children + [p[3]])
+    p[0] = ASTNode("ListArgs", p[1].children + [p[3]])
 
 def p_ListArgs_Arg(p):
     "ListArgs : Arg"
-    p[0] = ASTNode("Args", [p[1]])
+    p[0] = ASTNode("ListArgs", [p[1]])
 
 def p_Arg_Expression(p):
     "Arg : Expression"
-    p[0] = p[1]
+    p[0] = ASTNode("Arg", [p[1]])
 
 # Structered Statements (Ex.: Compound, Conditional, Repetitive)
 def p_StructeredStatement(p):
     "StructeredStatement : CompoundStatement"
-    p[0] = p[1]
+    p[0] = ASTNode("StructeredStatement", [p[1]])
 
 def p_StructeredStatement_ConditionalStatement(p):
     "StructeredStatement : ConditionalStatement"
-    p[0] = p[1]
+    p[0] = ASTNode("StructeredStatement", [p[1]])
 
 def p_StructeredStatement_RepetitiveStatement(p):
     "StructeredStatement : RepetitiveStatement"
-    p[0] = p[1]
+    p[0] = ASTNode("StructeredStatement", [p[1]])
 
 # Condicional
 def p_ConditionalStatement(p):
     "ConditionalStatement : IfStatement"
-    p[0] = p[1]
+    p[0] = ASTNode("ConditionalStatement", [p[1]])
 
 precedence = (
     ('nonassoc', 'IF'),
@@ -251,60 +251,60 @@ def p_IfStatement_ELSE(p):
 # Repetitivos (While e For)
 def p_RepetitiveStatement(p):
     "RepetitiveStatement : WhileStatement"
-    p[0] = p[1]
+    p[0] = ASTNode("RepetitiveStatement", [p[1]])
 
 def p_RepetitiveStatement_ForStatement(p):
     "RepetitiveStatement : ForStatement"
-    p[0] = p[1]
+    p[0] = ASTNode("RepetitiveStatement", [p[1]])
 
 def p_WhileStatement(p):
     "WhileStatement : WHILE Expression DO Statement"
-    p[0] = ASTNode("WhileStatement", [p[2], p[4]])
+    p[0] = ASTNode("WhileStatement", [p[2], 'Do', p[4]])
 
 def p_ForStatement(p):
     "ForStatement : FOR identifier ASSIGN Expression TO Expression DO Statement"
-    p[0] = ASTNode("ForStatement", [ASTNode("Identifier", [ASTNode(p[2])]), p[4], p[6], p[8]])
+    p[0] = ASTNode("ForStatement", [ASTNode("Identifier", [ASTNode(p[2])]), 'Assign', p[4], 'To', p[6], 'Do', p[8]])
 
 def p_ForStatement_FOR(p):
     "ForStatement : FOR identifier ASSIGN Expression DOWNTO Expression DO Statement"
-    p[0] = ASTNode("ForStatement", [ASTNode("Identifier", [ASTNode(p[2])]), p[4], p[6], p[8]])
+    p[0] = ASTNode("ForStatement", [ASTNode("Identifier", [ASTNode(p[2])]), 'Assign', p[4], 'DownTo', p[6], 'Do', p[8]])
 
 # Expressões e Operadores
 def p_Expression(p):
     "Expression : SimpleExpression RelationalOperator Expression"
-    p[0] = ASTNode("Expression", [p[1], ASTNode("Operator", [ASTNode(p[2])]), p[3]])
+    p[0] = ASTNode("Expression", [p[1], ASTNode("Operator", [p[2]]), p[3]])
 
 def p_Expression_SimpleExpression(p):
     "Expression : SimpleExpression"
-    p[0] = p[1]
+    p[0] = ASTNode("Expression", [p[1]])
 
 def p_RelationalOperator(p):
     "RelationalOperator : EQUAL"
-    p[0] = p[1]
+    p[0] = ASTNode("RelationalOperator", [p[1]])
 
 def p_RelationalOperator_GREATER_THAN(p):
     "RelationalOperator : GREATER_THAN"
-    p[0] = p[1]
+    p[0] = ASTNode("RelationalOperator", [p[1]])
 
 def p_RelationalOperator_LESS_THAN(p):
     "RelationalOperator : LESS_THAN"
-    p[0] = p[1]
+    p[0] = ASTNode("RelationalOperator", [p[1]])
 
 def p_RelationalOperator_NOT_EQUAL(p):
     "RelationalOperator : NOT_EQUAL"
-    p[0] = p[1]
+    p[0] = ASTNode("RelationalOperator", [p[1]])
 
 def p_RelationalOperator_GREATER_THAN_EQUAL(p):
     "RelationalOperator : GREATER_THAN_EQUAL"
-    p[0] = p[1]
+    p[0] = ASTNode("RelationalOperator", [p[1]])
 
 def p_RelationalOperator_LESS_THAN_EQUAL(p):
     "RelationalOperator : LESS_THAN_EQUAL"
-    p[0] = p[1]
+    p[0] = ASTNode("RelationalOperator", [p[1]])
 
 def p_SimpleExpression(p):
     "SimpleExpression : Sign Term SecondPriorityOperator SimpleExpression"
-    p[0] = ASTNode("SimpleExpression", [ASTNode("Sign", [p[1]]), p[2], ASTNode("Operator", value=p[3]), p[4]])
+    p[0] = ASTNode("SimpleExpression", [ASTNode("Sign", [p[1]]), p[2], ASTNode("Operator", [p[3]]), p[4]])
 
 def p_SimpleExpression_List(p):
     "SimpleExpression : Term SecondPriorityOperator SimpleExpression"
@@ -312,19 +312,19 @@ def p_SimpleExpression_List(p):
 
 def p_SimpleExpression_Term(p):
     "SimpleExpression : Term"
-    p[0] = p[1]
+    p[0] = ASTNode("SimpleExpression", [p[1]])
 
 def p_SecondPriorityOperator(p):
     "SecondPriorityOperator : '+'"
-    p[0] = p[1]
+    p[0] = ASTNode("SecondPriorityOperator", [p[1]])
 
 def p_SecondPriorityOperator_MINUS(p):
     "SecondPriorityOperator : '-'"
-    p[0] = p[1]
+    p[0] = ASTNode("SecondPriorityOperator", [p[1]])
 
 def p_SecondPriorityOperator_OR(p):
     "SecondPriorityOperator : OR"
-    p[0] = p[1]
+    p[0] = ASTNode("SecondPriorityOperator", [p[1]])
 
 def p_Sign(p):
     "Sign : '+'"
@@ -340,55 +340,55 @@ def p_Term(p):
 
 def p_Term_Factor(p):
     "Term : Factor"
-    p[0] = p[1]
+    p[0] = ASTNode("Term", [p[1]])
 
 def p_FirstPriorityOperator(p):
     "FirstPriorityOperator : '*'"
-    p[0] = p[1]
+    p[0] = ASTNode("FirstPriorityOperator", [p[1]])
 
 def p_FirstPriorityOperator_DIVISION(p):
     "FirstPriorityOperator : '/'"
-    p[0] = p[1]
+    p[0] = ASTNode("FirstPriorityOperator", [p[1]])
 
 def p_FirstPriorityOperator_DIV(p):
     "FirstPriorityOperator : DIV"
-    p[0] = p[1]
+    p[0] = ASTNode("FirstPriorityOperator", [p[1]])
 
 def p_FirstPriorityOperator_MOD(p):
     "FirstPriorityOperator : MOD"
-    p[0] = p[1]
+    p[0] = ASTNode("FirstPriorityOperator", [p[1]])
 
 def p_FirstPriorityOperator_AND(p):
     "FirstPriorityOperator : AND"
-    p[0] = p[1]
+    p[0] = ASTNode("FirstPriorityOperator", [p[1]])
 
 def p_Factor(p):
     "Factor : '(' Expression ')'"
-    p[0] = p[2]
+    p[0] = ASTNode("Factor", [p[2]])
 
 def p_Factor_Variable(p):
     "Factor : Variable"
-    p[0] = p[1]
+    p[0] = ASTNode("Factor", [p[1]])
 
 def p_Factor_UnsignedConstant(p):
     "Factor : UnsignedConstant"
-    p[0] = p[1]
+    p[0] = ASTNode("Factor", [p[1]])
 
 def p_Factor_FunctionDesignator(p):
     "Factor : FunctionDesignator"
-    p[0] = p[1]
+    p[0] = ASTNode("Factor", [p[1]])
 
 def p_Factor_NOT(p):
     "Factor : NOT Factor"
-    p[0] = ASTNode("Not", [p[2]])
+    p[0] = ASTNode("Factor", ["Not", p[2]])
 
 def p_Factor_TRUE(p):
     "Factor : TRUE"
-    p[0] = p[1]
+    p[0] = ASTNode("Factor", [p[1]])
 
 def p_Factor_FALSE(p):
     "Factor : FALSE"
-    p[0] = p[1]
+    p[0] = ASTNode("Factor", [p[1]])
 
 def p_FunctionDesignator(p):
     "FunctionDesignator : identifier '(' ListArgs ')'"
@@ -433,7 +433,7 @@ def p_UnsignedNumber_num_real(p):
 
 def p_Variable(p):
     "Variable : identifier"
-    p[0] = ASTNode("Variable", [ASTNode(p[1])])
+    p[0] = ASTNode("Variable", [ASTNode("Identifier", [p[1]])])
 
 def p_Variable_identifier(p):
     "Variable : identifier '[' ListExpressions ']'"
@@ -448,7 +448,7 @@ def p_ListExpressions_Expression(p):
     p[0] = ASTNode("ListExpressions", [p[1]])
 
 def p_error(p):
-    print('Erro sintático: ', p)
+    print('Syntax error: ', p)
     parser.success = False
 
 # Builds the parser
@@ -456,10 +456,16 @@ parser = yacc.yacc()
 
 import sys
 
-text = sys.stdin.read()
-parser.success = True
-result = parser.parse(text)
-if parser.success:
-    print(result)
-else:
-    print('Frase inválida... Corrija e tente novamente!')
+def parse_input(text):
+    parser.success = True
+    result = parser.parse(text)
+    return result if parser.success else None
+
+if __name__ == '__main__':
+    import sys
+    text = sys.stdin.read()
+    result = parse_input(text)
+    if result is not None:
+        print(result)
+    else:
+        print('Syntax error. Please check the code and try again.')

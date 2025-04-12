@@ -111,7 +111,7 @@ def t_comment(t):
 t_ignore = " \t\n"
 
 def t_error(t):
-    print('Caratér ilegal: ', t.value[0])
+    print('Illegal character: ', t.value[0])
     t.lexer.skip(1)
 
 lexer = lex.lex()
