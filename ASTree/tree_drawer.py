@@ -1,15 +1,15 @@
 import sys
 import tkinter as tk
-from astree import ASTNode
+from ASTree.astree import ASTNode
 
 def parse_ast(text):
     """
     Converts a textual representation of an AST (with indentation)
     into a tree of ASTNode objects.
-    
+
     Each line should have the format:
        <indentation><nodetype>[: <value>]
-    
+
     Example:
        Program: .
          Header: program header (simplified)
@@ -132,7 +132,7 @@ class TreeDrawer:
         window.attributes('-zoomed', True)
         screen_width = window.winfo_screenwidth()
         screen_height = window.winfo_screenheight()
-        
+
         # Create a frame with scrollbars
         frame = tk.Frame(window)
         frame.pack(fill="both", expand=True)
@@ -145,7 +145,7 @@ class TreeDrawer:
         canvas.pack(side=tk.LEFT, fill="both", expand=True)
         hbar.config(command=canvas.xview)
         vbar.config(command=canvas.yview)
-        
+
         self._center_positions(screen_width)
         self._draw_node(canvas, self.root_node)
         canvas.config(scrollregion=canvas.bbox("all"))
