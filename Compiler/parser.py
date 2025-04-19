@@ -1,6 +1,7 @@
 import ply.yacc as yacc
 from Compiler.lex import tokens, literals, reserved
 from ASTree.astree import ASTNode
+from Compiler.semantic import SemanticAnalyzer
 
 # Principal Rule
 def p_Program(p):
@@ -464,8 +465,14 @@ def parse_input(text):
 if __name__ == '__main__':
     import sys
     text = sys.stdin.read()
-    result = parse_input(text)
-    if result is not None:
-        print(result)
+    ast = parse_input(text)
+    analyzer = SemanticAnalyzer()
+    analyzer.analyze(ast)
+    #print(ast)
+
+    if analyzer.errors:
+        print("Semantic analysis errors:")
+        for err in analyzer.errors:
+            print("-", err)
     else:
-        print('Syntax error. Please check the code and try again.')
+        print("Semantic analysis completed successfully.")
