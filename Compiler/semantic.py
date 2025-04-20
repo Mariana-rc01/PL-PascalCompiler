@@ -44,23 +44,57 @@ class SemanticAnalyzer:
 
     def _visit_IfStatement(self, node):
         condition_node = node.children[0]
+        then_block = node.children[1]
+        else_block = node.children[2] if len(node.children) > 2 else None
+
         condition_type = self._get_expression_type(condition_node)
         if condition_type != 'boolean':
             self.errors.append(f"IF Condition must be boolean, found: '{condition_type}'.")
 
+        if isinstance(then_block, ASTNode):
+            self._visit(then_block)
+
+        if else_block and isinstance(else_block, ASTNode):
+            self._visit(else_block)
+
+    def _visit_block(self, block):
+        if isinstance(block, list):
+            for stmt in block:
+                if isinstance(stmt, ASTNode):
+                    self._visit(stmt)
+        elif isinstance(block, ASTNode):
+            self._visit(block)
+
     def _visit_ForStatement(self, node):
         control_var = node.children[0].value
-        if self.current_scope.get(control_var) != 'integer':
+        if self.current_scope.get(control_var) != 'Integer':
             self.errors.append(f"Control variable '{control_var}' must be an integer.")
 
         start_type = self._get_expression_type(node.children[2])
         end_type = self._get_expression_type(node.children[4])
-        if start_type != 'integer' or end_type != 'integer':
+        if start_type != 'Integer' or end_type != 'Integer':
             self.errors.append("Boundaries do FOR must be integers.")
 
     def _get_expression_type(self, node):
 
-        if node.nodetype in ('Arg', 'Expression', 'SimpleExpression', 'Term', 'Factor'):
+        if node.nodetype == 'Expression' and len(node.children) == 3:
+            left = node.children[0]
+            operator_node = node.children[1]
+            right = node.children[2]
+
+            if operator_node.nodetype == 'Operator' and operator_node.children:
+                inner_op_node = operator_node.children[0]
+                if inner_op_node.nodetype == 'RelationalOperator':
+                    left_type = self._get_expression_type(left)
+                    right_type = self._get_expression_type(right)
+
+                    if left_type == 'Integer' and right_type == 'Integer':
+                        return 'boolean'
+                    else:
+                        self.errors.append("Relational operators require integer operands.")
+                        return None
+
+        if node.nodetype in ('Arg', 'SimpleExpression', 'Expression', 'Term', 'Factor'):
             if len(node.children) == 1:
                 return self._get_expression_type(node.children[0])
             elif node.nodetype == 'SimpleExpression' and len(node.children) == 3:
