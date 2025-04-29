@@ -2,34 +2,31 @@ import ply.lex as lex
 
 literals = [';', ',', '(', ')', '.', '+', '-', '*', '/', '[', ']']
 
-reserved = {
-    "program" : "PROGRAM",
-    "procedure" : "PROCEDURE",
-    "function" : "FUNCTION",
-    "begin" : "BEGIN",
-    "end" : "END",
-    "for" : "FOR",
-    "to" : "TO",
-    "do" : "DO",
-    "and": "AND",
-    "or" : "OR",
-    "if" : "IF",
-    "then" : "THEN",
-    "else" : "ELSE",
-    "downto" : "DOWNTO",
-    "mod" : "MOD",
-    "div" : "DIV",
-    "not" : "NOT",
-    "while" : "WHILE",
-    "var" : "VAR",
-    "array" : "ARRAY",
-    "of" : "OF",
-    "true" : "TRUE",
-    "false" : "FALSE"
-}
-
 # Tokens
 tokens = [
+    'PROGRAM',
+    'PROCEDURE',
+    'FUNCTION',
+    'BEGIN',
+    'END',
+    'FOR',
+    'TO',
+    'DO',
+    'AND',
+    'OR',
+    'IF',
+    'THEN',
+    'ELSE',
+    'DOWNTO',
+    'MOD',
+    'DIV',
+    'NOT',
+    'WHILE',
+    'VAR',
+    'ARRAY',
+    'OF',
+    'TRUE',
+    'FALSE',
     'identifier',
     'char',
     'string',
@@ -43,13 +40,126 @@ tokens = [
     'GREATER_THAN_EQUAL',
     'LESS_THAN_EQUAL',
     'num_real'
-] + list(reserved.values())  # Adiciona as palavras reservadas como tokens
+]
+
+def t_PROGRAM(t):
+    r'program'
+    t.type = 'PROGRAM'
+    return t
+
+def t_PROCEDURE(t):
+    r'procedure'
+    t.type = 'PROCEDURE'
+    return t
+
+def t_FUNCTION(t):
+    r'function'
+    t.type = 'FUNCTION'
+    return t
+
+def t_BEGIN(t):
+    r'begin'
+    t.type = 'BEGIN'
+    return t
+
+def t_END(t):
+    r'end'
+    t.type = 'END'
+    return t
+
+def t_FOR(t):
+    r'for'
+    t.type = 'FOR'
+    return t
+
+def t_TO(t):
+    r'to'
+    t.type = 'TO'
+    return t
+
+def t_DOWNTO(t):
+    r'downto'
+    t.type = 'DOWNTO'
+    return t
+
+def t_DO(t):
+    r'do'
+    t.type = 'DO'
+    return t
+
+def t_AND(t):
+    r'and'
+    t.type = 'AND'
+    return t
+
+def t_OR(t):
+    r'or'
+    t.type = 'OR'
+    return t
+
+def t_IF(t):
+    r'if'
+    t.type = 'IF'
+    return t
+
+def t_THEN(t):
+    r'then'
+    t.type = 'THEN'
+    return t
+
+def t_ELSE(t):
+    r'else'
+    t.type = 'ELSE'
+    return t
+
+def t_MOD(t):
+    r'mod'
+    t.type = 'MOD'
+    return t
+
+def t_DIV(t):
+    r'div'
+    t.type = 'DIV'
+    return t
+
+def t_NOT(t):
+    r'not'
+    t.type = 'NOT'
+    return t
+
+def t_WHILE(t):
+    r'while'
+    t.type = 'WHILE'
+    return t
+
+def t_VAR(t):
+    r'var'
+    t.type = 'VAR'
+    return t
+
+def t_ARRAY(t):
+    r'array'
+    t.type = 'ARRAY'
+    return t
+
+def t_OF(t):
+    r'of'
+    t.type = 'OF'
+    return t
+
+def t_TRUE(t):
+    r'true'
+    t.type = 'TRUE'
+    return t
+
+def t_FALSE(t):
+    r'false'
+    t.type = 'FALSE'
+    return t
 
 # Regras para tokens
 def t_identifier(t):
     r'[a-zA-Z_][a-zA-Z0-9_]*'
-    # Verifica se a palavra está na lista de reservadas
-    t.type = reserved.get(t.value.lower(), 'identifier')
     return t
 
 def t_char(t):

@@ -1,5 +1,5 @@
 import ply.yacc as yacc
-from Compiler.lex import tokens, literals, reserved
+from Compiler.lex import tokens, literals
 from ASTree.astree import ASTNode
 from Compiler.semantic import SemanticAnalyzer
 
