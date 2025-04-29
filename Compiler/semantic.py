@@ -23,7 +23,7 @@ class SemanticAnalyzer:
     def _visit_VarElemDeclaration(self, node):
         identifier_list = node.children[0]
         var_type_node = node.children[1]
-        var_type = var_type_node.children[0].nodetype
+        var_type = var_type_node.children[0].nodetype.lower()
 
         for identifier_node in identifier_list.children:
             var_name = identifier_node.children[0].nodetype
@@ -66,16 +66,52 @@ class SemanticAnalyzer:
             self._visit(block)
 
     def _visit_ForStatement(self, node):
-        control_var = node.children[0].value
-        if self.current_scope.get(control_var) != 'Integer':
-            self.errors.append(f"Control variable '{control_var}' must be an integer.")
+        control_var_node = node.children[0].children[0]
+        control_var_name = control_var_node.nodetype
 
-        start_type = self._get_expression_type(node.children[2])
-        end_type = self._get_expression_type(node.children[4])
-        if start_type != 'Integer' or end_type != 'Integer':
-            self.errors.append("Boundaries do FOR must be integers.")
+        declared_type = self.current_scope.get(control_var_name)
+        if declared_type is None:
+            self.errors.append(f"Control variable '{control_var_name}' is not declared.")
+        elif declared_type != 'integer':
+            self.errors.append(f"Control variable '{control_var_name}' must be an integer.")
+
+        start_expr = node.children[2]
+        direction = node.children[3]  # TO ou DOWNTO
+        end_expr = node.children[4]
+        # do = node.children[5]
+        loop_body = node.children[6]
+
+        start_value = self._evaluate_constant(start_expr)
+        end_value = self._evaluate_constant(end_expr)
+
+        if start_value is not None and end_value is not None:
+            if direction == 'TO' and start_value > end_value:
+                self.errors.append("FOR loop will never execute: start > end with 'TO'.")
+            elif direction == 'DOWNTO' and start_value < end_value:
+                self.errors.append("FOR loop will never execute: start < end with 'DOWNTO'.")
+
+        self._visit(loop_body)
+
+    def _visit_WhileStatement(self, node):
+        # node.children = [condição, corpo]
+        condition_node = node.children[0]
+        body_node = node.children[2]
+
+        condition_type = self._get_expression_type(condition_node)
+        if condition_type != 'boolean':
+            self.errors.append(f"WHILE condition must be boolean, found: '{condition_type}'.")
+
+        self._visit(body_node)
+
+    def _evaluate_constant(self, node):
+        if node.nodetype == 'Num_Int':
+            return int(node.value)
+        return None
 
     def _get_expression_type(self, node):
+
+        if node in ('true', 'false'):
+            return 'boolean'
 
         if node.nodetype == 'Expression' and len(node.children) == 3:
             left = node.children[0]
@@ -88,55 +124,78 @@ class SemanticAnalyzer:
                     left_type = self._get_expression_type(left)
                     right_type = self._get_expression_type(right)
 
-                    if left_type == 'Integer' and right_type == 'Integer':
+                    if left_type == 'integer' and right_type == 'integer':
                         return 'boolean'
                     else:
                         self.errors.append("Relational operators require integer operands.")
                         return None
 
-        if node.nodetype in ('Arg', 'SimpleExpression', 'Expression', 'Term', 'Factor'):
+        if node.nodetype == 'Factor':
+            print(f"Factor: {node}")
+            if len(node.children) == 1:
+                return self._get_expression_type(node.children[0])
+            elif any(child.nodetype == 'Expression' for child in node.children):
+                for child in node.children:
+                    if child.nodetype == 'Expression':
+                        return self._get_expression_type(child)
+
+
+        if node.nodetype in ('Arg', 'SimpleExpression', 'Expression', 'Term', 'Factor', 'UnsignedConstant'):
             if len(node.children) == 1:
                 return self._get_expression_type(node.children[0])
             elif node.nodetype == 'SimpleExpression' and len(node.children) == 3:
-                print(f"SimpleExpression: {node.children[0].nodetype} {node.children[1]} {node.children[2].nodetype}")
                 return self._get_expression_type(
                     ASTNode(nodetype='Operator', value=node.children[1], children=[node.children[0], node.children[2]])
                 )
 
         if node.nodetype == 'Variable':
             identifier_node = node.children[0]
-            if isinstance(identifier_node, ASTNode):
+
+            if isinstance(identifier_node, ASTNode) and identifier_node.nodetype == 'Identifier':
                 var_name = identifier_node.children[0]
-            else:
+            elif isinstance(identifier_node, str):
                 var_name = identifier_node
+            else:
+                self.errors.append(f"Unexpected structure in Variable node: {identifier_node}")
+                return None
 
-
-            var_type = self.current_scope.get(var_name, None)
+            var_type = self.current_scope.get(var_name)
             if var_type is None:
                 self.errors.append(f"Variable '{var_name}' is not declared.")
-            return var_type
+            return var_type.lower() if var_type else None
 
         elif node.nodetype == 'Num_Int':
             return 'integer'
-
-        elif node.nodetype in ('TRUE', 'FALSE'):
-            return 'boolean'
-
         elif node.nodetype == 'String':
             return 'string'
 
         elif node.nodetype == 'Operator':
             operator = node.value
+            print(f"Operator: {operator}")
             left_type = self._get_expression_type(node.children[0])
             right_type = self._get_expression_type(node.children[1]) if len(node.children) > 1 else None
 
-            if operator in ('+', '-', '*', '/'):
+            if operator in ('+', '-', '*', '/', 'div', 'mod'):
                 if left_type == 'integer' and right_type == 'integer':
                     return 'integer'
                 else:
-                    self.errors.append(f"Operação '{operator}' requer inteiros.")
-            elif operator in ('>', '<', '==', '!='):
-                return 'boolean'
+                    self.errors.append(f"Operation '{operator}' requires integer operands.")
+            elif operator in ('=', '<>', '<', '>', '<=', '>='):
+                if left_type == right_type:
+                    return 'boolean'
+                else:
+                    self.errors.append(f"Comparison '{operator}' requires matching operand types.")
+            elif operator in ('and', 'or'):
+                if left_type == 'boolean' and right_type == 'boolean':
+                    return 'boolean'
+                else:
+                    self.errors.append(f"Logical operator '{operator}' requires boolean operands.")
+            elif operator == 'not':
+                if left_type == 'boolean':
+                    return 'boolean'
+                else:
+                    self.errors.append("Operator 'not' requires a boolean operand.")
+
 
         return None
 
