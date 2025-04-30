@@ -141,11 +141,11 @@ def p_ListParameters_ElemParameter(p):
 
 def p_ElemParameter(p):
     "ElemParameter : IdentifierList COLON ARRAY OF identifier"
-    p[0] = ASTNode("Parameter", [p[1], ASTNode("ArrayType", [ASTNode("Type", value=p[5])])])
+    p[0] = ASTNode("Parameter", [p[1], ASTNode("ArrayType", [ASTNode("Type",  [p[5]])])])
 
 def p_ListParameters_ElemParameter_identifier(p):
     "ElemParameter : IdentifierList COLON identifier"
-    p[0] = ASTNode("Parameter", [p[1], ASTNode("Type", value=p[3])])
+    p[0] = ASTNode("Parameter", [p[1], ASTNode("Type", [p[3]])])
     #print("Debug: ElemParameter ->", p[0])
 
 # Compound Statement

@@ -20,6 +20,67 @@ class SemanticAnalyzer:
                 if isinstance(child, ASTNode):
                     self._visit(child)
 
+    def _visit_FunctionDeclaration(self, node):
+        func_name = node.children[0].children[0]
+        params_node = node.children[1]
+        return_type_node = node.children[2].children[0]
+        body_node = node.children[3]
+
+        if func_name in self.symbol_table[0]:
+            self.errors.append(f"Function '{func_name}' already declared.")
+            return
+
+        local_scope = {}
+        self.symbol_table.append(local_scope)
+        self.current_scope = local_scope
+
+        param_list = self._process_parameters(params_node)
+        return_type = return_type_node.lower()
+
+        self.symbol_table[0][func_name] = {
+            'type': 'function',
+            'params': param_list,
+            'return_type': return_type
+        }
+
+        for param_name, param_type in param_list:
+            self._declare_parameter(param_name, param_type)
+
+        self.current_scope[func_name] = return_type
+
+        self._visit(body_node)
+
+        self.symbol_table.pop()
+        self.current_scope = self.symbol_table[-1]
+
+    def _visit_ProcedureDeclaration(self, node):
+        proc_name = node.children[0].children[0]
+        params_node = node.children[1]
+        body_node = node.children[2]
+
+        if proc_name in self.symbol_table[0]:
+            self.errors.append(f"Procedure '{proc_name}' already declared.")
+            return
+
+        local_scope = {}
+        self.symbol_table.append(local_scope)
+        self.current_scope = local_scope
+
+        param_list = self._process_parameters(params_node)
+
+        self.symbol_table[0][proc_name] = {
+            'type': 'procedure',
+            'params': param_list
+        }
+
+        for param_name, param_type in param_list:
+            self._declare_parameter(param_name, param_type)
+
+        self._visit(body_node)
+
+        self.symbol_table.pop()
+        self.current_scope = self.symbol_table[-1]
+
     def _visit_VarElemDeclaration(self, node):
         identifier_list = node.children[0]
         var_type_node = node.children[1]
@@ -256,5 +317,70 @@ class SemanticAnalyzer:
 
         # Fallback
         return None
+
+    def _process_parameters(self, params_node):
+        params = []
+        if not isinstance(params_node, ASTNode):
+            return params
+
+        list_params = params_node.children[0] if params_node.children else None
+        if not isinstance(list_params, ASTNode):
+            return params
+
+        def process_parameter_group(param_group):
+            if param_group.nodetype == "Parameters":
+                for param in param_group.children:
+                    id_list = param.children[0].children
+                    type_node = param.children[1]
+                    param_type = self._parse_type_node(type_node)
+                    for id_node in id_list:
+                        param_name = str(id_node.children[0]).strip()
+                        params.append((param_name, param_type))
+            elif param_group.nodetype == "Parameter":
+                id_list = param_group.children[0].children
+                type_node = param_group.children[1]
+                param_type = self._parse_type_node(type_node)
+                for id_node in id_list:
+                    param_name = str(id_node.children[0]).strip()
+                    params.append((param_name, param_type))
+
+        for child in list_params.children:
+            if isinstance(child, ASTNode):
+                process_parameter_group(child)
+
+        return params
+
+    def _parse_type_node(self, type_node):
+        if not isinstance(type_node, ASTNode) or not type_node.children:
+            self.errors.append("Invalid type node in parameter declaration.")
+            return None
+        if type_node.nodetype == "ArrayType":
+            if type_node.children and len(type_node.children) >= 2:
+                base_type_node = type_node.children[1]
+                if base_type_node.children:
+                    base_type = base_type_node.children[0].nodetype.lower()
+                    return {'type': 'array',
+                            'element_type': base_type}
+            self.errors.append("Malformed array type.")
+            return None
+
+        base_child = type_node.children[0]
+        if hasattr(base_child, 'value'):
+            base_type = base_child.value.lower()
+        else:
+            base_type = base_child.lower()
+
+        if base_type == "string":
+            return {'type': 'array',
+                    'element_type': 'char',
+                    'LowBound': 0,
+                    'HighBound': 255}
+        return base_type
+
+    def _declare_parameter(self, name, param_type):
+        if name in self.current_scope:
+            self.errors.append(f"Parameter '{name}' already declared.")
+            return
+        self.current_scope[name] = param_type
 
 
