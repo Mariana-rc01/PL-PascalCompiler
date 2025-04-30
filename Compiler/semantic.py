@@ -129,8 +129,6 @@ class SemanticAnalyzer:
                         }
                     else: self.current_scope[var_name] = var_type
 
-        print(self.current_scope)
-
     def _visit_Assignment(self, node):
         var_type = self._get_expression_type(node.children[0])
         expr_type = self._get_expression_type(node.children[1])
