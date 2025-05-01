@@ -1,0 +1,63 @@
+START
+
+  PUSHS "Introduza um número inteiro positivo:"
+  WRITES
+  WRITELN
+  READ
+  ATOI
+  STOREG 0
+
+  PUSHI 1
+  STOREG 2
+  PUSHI 2
+  STOREG 1
+
+LOOP:
+  PUSHG 1
+  PUSHG 0 
+  PUSHI 2
+  DIV
+  INFEQ
+  PUSHG 2
+  AND
+  JZ ENDLOOP
+
+  PUSHG 0
+  PUSHG 1
+  MOD
+  PUSHI 0
+  EQUAL
+  JZ NOSET
+    PUSHI 0
+    STOREG 2
+  NOSET:
+
+  PUSHG 1
+  PUSHI 1
+  ADD
+  STOREG 1
+
+  JUMP LOOP
+
+ENDLOOP:
+
+  PUSHG 2
+  JZ PRINTNOT
+
+  PUSHG 0
+  WRITEI
+  PUSHS " é um número primo"
+  WRITES
+  WRITELN
+  JUMP END
+
+PRINTNOT:
+  PUSHG 0
+  WRITEI
+  PUSHS " não é um número primo"
+  WRITES
+  WRITELN
+
+END:
+
+STOP
