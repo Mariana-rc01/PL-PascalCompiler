@@ -1,3 +1,4 @@
+import re
 import ply.lex as lex
 
 literals = [';', ',', '(', ')', '.', '+', '-', '*', '/', '[', ']']
@@ -43,117 +44,117 @@ tokens = [
 ]
 
 def t_PROGRAM(t):
-    r'program'
+    r'\bprogram\b'
     t.type = 'PROGRAM'
     return t
 
 def t_PROCEDURE(t):
-    r'procedure'
+    r'\bprocedure\b'
     t.type = 'PROCEDURE'
     return t
 
 def t_FUNCTION(t):
-    r'function'
+    r'\bfunction\b'
     t.type = 'FUNCTION'
     return t
 
 def t_BEGIN(t):
-    r'begin'
+    r'\bbegin\b'
     t.type = 'BEGIN'
     return t
 
 def t_END(t):
-    r'end'
+    r'\bend\b'
     t.type = 'END'
     return t
 
 def t_FOR(t):
-    r'for'
+    r'\bfor\b'
     t.type = 'FOR'
     return t
 
 def t_TO(t):
-    r'to'
+    r'\bto\b'
     t.type = 'TO'
     return t
 
 def t_DOWNTO(t):
-    r'downto'
+    r'\bdownto\b'
     t.type = 'DOWNTO'
     return t
 
 def t_DO(t):
-    r'do'
+    r'\bdo\b'
     t.type = 'DO'
     return t
 
 def t_AND(t):
-    r'and'
+    r'\band\b'
     t.type = 'AND'
     return t
 
 def t_OR(t):
-    r'or'
+    r'\bor\b'
     t.type = 'OR'
     return t
 
 def t_IF(t):
-    r'if'
+    r'\bif\b'
     t.type = 'IF'
     return t
 
 def t_THEN(t):
-    r'then'
+    r'\bthen\b'
     t.type = 'THEN'
     return t
 
 def t_ELSE(t):
-    r'else'
+    r'\belse\b'
     t.type = 'ELSE'
     return t
 
 def t_MOD(t):
-    r'mod'
+    r'\bmod\b'
     t.type = 'MOD'
     return t
 
 def t_DIV(t):
-    r'div'
+    r'\bdiv\b'
     t.type = 'DIV'
     return t
 
 def t_NOT(t):
-    r'not'
+    r'\bnot\b'
     t.type = 'NOT'
     return t
 
 def t_WHILE(t):
-    r'while'
+    r'\bwhile\b'
     t.type = 'WHILE'
     return t
 
 def t_VAR(t):
-    r'var'
+    r'\bvar\b'
     t.type = 'VAR'
     return t
 
 def t_ARRAY(t):
-    r'array'
+    r'\barray\b'
     t.type = 'ARRAY'
     return t
 
 def t_OF(t):
-    r'of'
+    r'\bof\b'
     t.type = 'OF'
     return t
 
 def t_TRUE(t):
-    r'true'
+    r'\btrue\b'
     t.type = 'TRUE'
     return t
 
 def t_FALSE(t):
-    r'false'
+    r'\bfalse\b'
     t.type = 'FALSE'
     return t
 
@@ -224,4 +225,4 @@ def t_error(t):
     print('Illegal character: ', t.value[0])
     t.lexer.skip(1)
 
-lexer = lex.lex()
+lexer = lex.lex(reflags=re.IGNORECASE)
