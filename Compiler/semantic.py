@@ -196,14 +196,11 @@ class SemanticAnalyzer:
         loop_body = node.children[6]
 
         # Check if loop makes logical sense with constant bounds
-        start_value = int(start_expr.value) if start_expr.nodetype == 'Num_Int' else None
-        end_value = int(end_expr.value) if end_expr.nodetype == 'Num_Int' else None
+        start_value = self._get_expression_type(start_expr) == 'integer'
+        end_value = self._get_expression_type(end_expr) == 'integer'
 
-        if start_value is not None and end_value is not None:
-            if direction == 'TO' and start_value > end_value:
-                self.errors.append("FOR loop will never execute: start > end with 'TO'.")
-            elif direction == 'DOWNTO' and start_value < end_value:
-                self.errors.append("FOR loop will never execute: start < end with 'DOWNTO'.")
+        if start_value is False or end_value is False:
+            self.errors.append("FOR loop bounds must be constant expressions.")
 
         self._visit(loop_body)
 
