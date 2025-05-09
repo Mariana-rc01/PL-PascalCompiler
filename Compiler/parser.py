@@ -2,6 +2,7 @@ import ply.yacc as yacc
 from Compiler.lex import tokens, literals
 from ASTree.astree import ASTNode
 from Compiler.semantic import SemanticAnalyzer
+from Compiler.codegen import CodeGenerator
 
 # Principal Rule
 def p_Program(p):
@@ -475,4 +476,7 @@ if __name__ == '__main__':
         for err in analyzer.errors:
             print("-", err)
     else:
-        print("Semantic analysis completed successfully.")
+        generator = CodeGenerator()
+        code = generator.generate(ast)
+        print("Generated code:")
+        print(code)
