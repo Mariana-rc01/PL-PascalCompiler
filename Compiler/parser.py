@@ -1,6 +1,7 @@
 import ply.yacc as yacc
-from Compiler.lex import tokens, literals, reserved
+from Compiler.lex import tokens, literals
 from ASTree.astree import ASTNode
+from Compiler.semantic import SemanticAnalyzer
 
 # Principal Rule
 def p_Program(p):
@@ -140,11 +141,11 @@ def p_ListParameters_ElemParameter(p):
 
 def p_ElemParameter(p):
     "ElemParameter : IdentifierList COLON ARRAY OF identifier"
-    p[0] = ASTNode("Parameter", [p[1], ASTNode("ArrayType", [ASTNode("Type", value=p[5])])])
+    p[0] = ASTNode("Parameter", [p[1], ASTNode("ArrayType", [ASTNode("Type",  [p[5]])])])
 
 def p_ListParameters_ElemParameter_identifier(p):
     "ElemParameter : IdentifierList COLON identifier"
-    p[0] = ASTNode("Parameter", [p[1], ASTNode("Type", value=p[3])])
+    p[0] = ASTNode("Parameter", [p[1], ASTNode("Type", [p[3]])])
     #print("Debug: ElemParameter ->", p[0])
 
 # Compound Statement
@@ -464,8 +465,14 @@ def parse_input(text):
 if __name__ == '__main__':
     import sys
     text = sys.stdin.read()
-    result = parse_input(text)
-    if result is not None:
-        print(result)
+    ast = parse_input(text)
+    analyzer = SemanticAnalyzer()
+    analyzer.analyze(ast)
+    #print(ast)
+
+    if analyzer.errors:
+        print("Semantic analysis errors:")
+        for err in analyzer.errors:
+            print("-", err)
     else:
-        print('Syntax error. Please check the code and try again.')
+        print("Semantic analysis completed successfully.")
