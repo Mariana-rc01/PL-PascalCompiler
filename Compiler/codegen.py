@@ -14,10 +14,6 @@ class CodeGenerator:
         self.output.append("\nSTOP")
         return "\n".join(self.output)
 
-    def _generate_label(self, base):
-        self.label_count += 1
-        return f"{base}{self.label_count}"
-
     def _get_variable_address(self, identifier_node):
         """Determina o endereço da variável baseado no nome do identificador."""
         name = identifier_node.children[0]
@@ -160,23 +156,60 @@ class CodeGenerator:
             return node.children[0].children[0].children[0].children[0].children[0].children[0].children[0].nodetype == "String"
         return False
 
+    def _visit_structeredstatement(self, node):
+        print("[DEBUG] Visiting structured statement")
+        self._visit_children(node)
+
+    def _visit_conditionalstatement(self, node):
+        print("[DEBUG] Visiting conditional statement")
+        self._visit_children(node)
+
     def _visit_ifstatement(self, node): # FIQUEI AQUI, PRECISO DE CORRIGIR O ELSE
+        print("[DEBUG] Visiting if statement")
         condition_node = node.children[0]
         then_block = node.children[1]
         else_block = node.children[2] if len(node.children) > 2 else None
 
-        else_label = self._generate_label("ELSE")
-        end_label = self._generate_label("ENDIF")
+        print("=" * 20)
+        print(f"Condition: {condition_node}")
+        print(f"Then block: {then_block}")
+        print(f"Else block: {else_block}")
+        print("=" * 20)
 
-        self._visit(condition_node)
+        else_label = f"ELSE{self.label_count}"
+        end_label = f"END{self.label_count}"
+        self.label_count += 1
+
+        print(f"[DEBUG] Else label: {else_label}")
+        print(f"[DEBUG] End label: {end_label}")
+
+        self._visit(condition_node) # Falta fazer o tratamento do nó com a condição para decidir a próxima instrução
         self.output.append(" " * self.current_identation + f"JZ {else_label}")
+
+        self.current_identation += 2
 
         self._visit(then_block)
         self.output.append(" " * self.current_identation + f"JUMP {end_label}")
         self.output.append(" " * self.current_identation + f"{else_label}:")
+
+        self.current_identation -= 2
+
         if else_block:
             self._visit(else_block)
         self.output.append(" " * self.current_identation + f"{end_label}:")
+
+    def _visit_simplestatement(self, node):
+        print("[DEBUG] Visiting simple statement")
+        self._visit_children(node)
+
+    def _visit_operator(self, node):
+        print("[DEBUG] Visiting operator")
+        self._visit_children(node)
+
+    def _visit_relationaloperator(self, node):
+        print("[DEBUG] Visiting relational operator")
+        if node.children[0] == ">":
+            self.output.append(" " * self.current_identation + "SUP")
 
     def _visit_else(self, node):
         """Lida com o bloco do 'else'."""
@@ -184,7 +217,20 @@ class CodeGenerator:
 
     def _visit_expression(self, node):
         """Lida com o nó 'Expression'."""
-        self._visit_children(node)
+        print("[DEBUG] Visiting expression AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+        if len(node.children) > 1:
+            print(f"[DEBUG] SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSss: {node.children[1].nodetype}")
+            if node.children[1].nodetype == "Operator":
+                print(f"{node.children[1].children[0]}")
+                if node.children[1].children[0].nodetype == "RelationalOperator":
+                    print(f"--> 1: {node.children[0]}")
+                    print(f"--> 2: {node.children[2].children[0]}")
+                    print(f"--> 3: {node.children[1]}")
+                    self._visit(node.children[0])
+                    self._visit(node.children[2])
+                    self._visit(node.children[1]) # Fiquei aqui a tentar perceber como mudar a ordem da operação
+
+        #self._visit_children(node)
 
     def _visit_term(self, node):
         """Lida com o nó 'Term'."""

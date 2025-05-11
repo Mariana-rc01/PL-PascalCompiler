@@ -14,11 +14,7 @@ begin
 
     { Calcular o maior }
     if num1 > num2 then
-        if num1 > num3 then maior := num1
-        else maior := num3
-    else
-        if num2 > num3 then maior := num2
-        else maior := num3;
+        maior := num1;
 
     { Escrever o resultado }
     WriteLn('O maior é: ', maior)
