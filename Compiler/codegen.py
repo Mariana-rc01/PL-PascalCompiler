@@ -6,6 +6,7 @@ class CodeGenerator:
         self.var_counter = 0 # Perceber qual o endereço a utilizar para a próxima variável
         self.var_map = {} # Mapear o sitio da memória para cada variável
         self.label_count = 0
+        self.loop_label_count = 0
         self.current_identation = 2
 
     def generate(self, ast_root):
@@ -93,7 +94,7 @@ class CodeGenerator:
                 self.var_map[var_name] = self.var_counter # Adiciona a variável ao mapa com o endereço atual
                 self.output.append(" " * self.current_identation +  f"PUSHI 0 //initialize {var_name}")  # Inicializa a variável com 0
                 self.output.append(" " * self.current_identation +  f"STOREG {self.var_counter} //declare {var_name}")  # Adiciona a variável à saída
-                self.output.append("\n") # Adiciona uma nova linha para melhor legibilidade
+                self.output.append("") # Adiciona uma nova linha para melhor legibilidade
                 self.var_counter += 1  # Incrementa o contador para a próxima variável
 
     def _visit_compoundstatement(self, node):
@@ -144,11 +145,8 @@ class CodeGenerator:
     def _visit_procedurewriteln(self, node):
         if len(node.children) > 1:
             arg_node = node.children[1]
-            print(f"[DEBUG] Argument node: {arg_node}")
             for child in arg_node.children:
                 self._visit(child)
-                print(f"[DEBUG] Child node: {child}")
-                print(f"[DEBUG] Child node type: {self._is_string(arg_node)}")
                 if self._is_string(child):
                     self.output.append(" " * self.current_identation + "WRITES")
                 else:
@@ -157,9 +155,7 @@ class CodeGenerator:
 
     def _is_string(self, node):
         print("[DEBUG] Checking if node is a string")
-        print(f"[DEBUG] Node type: {node}")
         if node.children[0].children[0].children[0].children[0].children[0].nodetype == "UnsignedConstant":
-            print("ENTREIIIIIDJDJDJDJDJDJJDJDJDJDJDJ")
             return node.children[0].children[0].children[0].children[0].children[0].children[0].nodetype == "String"
         return False
 
@@ -186,9 +182,6 @@ class CodeGenerator:
         else_label = f"ELSE{self.label_count}"
         end_label = f"END{self.label_count}"
         self.label_count += 1
-
-        print(f"[DEBUG] Else label: {else_label}")
-        print(f"[DEBUG] End label: {end_label}")
 
         self._visit(condition_node) # Falta fazer o tratamento do nó com a condição para decidir a próxima instrução
         self.output.append(" " * self.current_identation + f"JZ {else_label}")
@@ -218,40 +211,65 @@ class CodeGenerator:
         if node.children[0] == ">":
             self.output.append(" " * self.current_identation + "SUP")
 
+    def _visit_firstpriorityoperator(self, node):
+        print("[DEBUG] Visiting first priority operator")
+        if node.children[0] == "*":
+            self.output.append(" " * self.current_identation + "MUL")
+
     def _visit_else(self, node):
         """Lida com o bloco do 'else'."""
         self._visit_children(node)  # Executa os filhos (como o bloco 'else')
 
     def _visit_expression(self, node):
         """Lida com o nó 'Expression'."""
-        print("[DEBUG] Visiting expression AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+        print("ENTREI AQUI NA EXPRESSIONNNNNNNNNNNNNNNNNNNNNNNNNNNNNNnn")
+        print(f"[DEBUG] Visiting expression: {node}")
         if len(node.children) > 1:
-            print(f"[DEBUG] SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSss: {node.children[1].nodetype}")
             if node.children[1].nodetype == "Operator":
-                print(f"{node.children[1].children[0]}")
+                print(f"[DEBUG] FFFFFFFFFFFFFFFFFFFFFFFF {node.children[1].children[0]}")
                 if node.children[1].children[0].nodetype == "RelationalOperator":
-                    print(f"--> 1: {node.children[0]}")
-                    print(f"--> 2: {node.children[2].children[0]}")
-                    print(f"--> 3: {node.children[1]}")
                     self._visit(node.children[0])
                     self._visit(node.children[2].children[0])
-                    self._visit(node.children[1]) # Fiquei aqui a tentar perceber como mudar a ordem da operação
+                    self._visit(node.children[1])
         else:
             self._visit_children(node)
 
     def _visit_assignment(self, node):
         print("[DEBUG] Visiting assignment")
         destination = node.children[0].children[0].children[0]
-        source = node.children[1].children[0].children[0].children[0].children[0].children[0].children[0]
+
+        print(f"[SOURCE] All content: {node.children[1].children[0].children[0]}")
+
+        if len(node.children[1].children[0].children[0].children) > 1:
+            source = None
+            self._visit_children(node.children[1].children[0])
+        else:
+            source = node.children[1].children[0].children[0].children[0].children[0].children[0].children[0]
+
         print(f"[DEBUG] Destination: {destination}")
         print(f"[DEBUG] Source: {source}")
         self.output.append(" " * self.current_identation + f"// Assignment: {destination} := {source}")
-        self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[source]}")  # Pega no valor da variável
+        if source is None:
+            pass
+        elif node.children[1].children[0].children[0].children[0].children[0].children[0].nodetype == "Num_Int":
+            self.output.append(" " * self.current_identation + f"PUSHI {source}")  # Pega no valor do número
+        else:
+            self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[source]}")  # Pega no valor da variável
         self.output.append(" " * self.current_identation + f"STOREG {self.var_map[destination]}")  # Armazena o valor na variável de destino
 
     def _visit_term(self, node):
         """Lida com o nó 'Term'."""
-        self._visit_children(node)
+        print("[DEBUG] Visiting term")
+        print(f"[DEBUG] AQUIIII Term: {node}")
+        if len(node.children) > 1:
+            if node.children[1].nodetype == "Operator":
+                print(f"[DEBUG] FFFFFFFFFFFFFFFFFFFFFFFF {node.children[1].children[0]}")
+                if node.children[1].children[0].nodetype == "FirstPriorityOperator":
+                    self._visit(node.children[0])
+                    self._visit(node.children[2])
+                    self._visit(node.children[1])
+        else:
+            self._visit_children(node)
 
     def _visit_factor(self, node):
         """Lida com o nó 'Factor'."""
@@ -270,3 +288,50 @@ class CodeGenerator:
                 variable_address = self._get_variable_address(child)
                 if variable_address is not None:
                     self.output.append(" " * self.current_identation + f"PUSHG {variable_address}")
+
+    def _visit_repetitivestatement(self, node):
+        """Lida com o nó 'RepetitiveStatement'."""
+        print("[DEBUG] Visiting repetitive statement")
+        self._visit_children(node)
+
+    def _visit_forstatement(self, node):
+        """Lida com o nó 'ForStatement'."""
+        print("[DEBUG] Visiting for statement")
+
+        iterator_name = node.children[0].children[0].nodetype
+        print(f"[DEBUG] Iterator: {iterator_name}")
+        start_value = node.children[2].children[0].children[0].children[0].children[0].children[0].children[0]
+        print(f"[DEBUG] Start value: {start_value}")
+        end_variable_name = node.children[4].children[0].children[0].children[0].children[0].children[0].children[0]
+        print(f"[DEBUG] End variable name: {end_variable_name}")
+
+        self.output.append(" " * self.current_identation + "// For statement")
+        init_label = f"LOOP{self.loop_label_count}"
+        end_label = f"ENDLOOP{self.loop_label_count}"
+        self.loop_label_count += 1
+
+        self.output.append(" " * self.current_identation + f"PUSHI {start_value}")
+        self.output.append(" " * self.current_identation + f"STOREG {self.var_map[iterator_name]}")
+        self.output.append(" " * self.current_identation + f"{init_label}:")
+        self.current_identation += 2
+
+        self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[iterator_name]}")
+        self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[end_variable_name]}")
+        self.output.append(" " * self.current_identation + f"INFEQ")
+        self.output.append(" " * self.current_identation + f"JZ {end_label}")
+        self.output.append(" " * self.current_identation + f"// For statement body")
+        self._visit(node.children[6]) # Visita o corpo do loop
+        self.output.append(" " * self.current_identation + f"// End of for statement body")
+        self.output.append("")
+        self.output.append(" " * self.current_identation + f"// Increment iterator")
+        self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[iterator_name]}")
+        self.output.append(" " * self.current_identation + f"PUSHI 1")
+        self.output.append(" " * self.current_identation + f"ADD")
+        self.output.append(" " * self.current_identation + f"STOREG {self.var_map[iterator_name]}")
+
+        self.output.append(" " * self.current_identation + f"JUMP {init_label}")
+        self.current_identation -= 2
+
+        self.output.append(" " * self.current_identation + f"{end_label}:")
+        self.output.append(" " * self.current_identation + "// End of for statement")
+        self.output.append("")
