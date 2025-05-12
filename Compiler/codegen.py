@@ -144,16 +144,23 @@ class CodeGenerator:
     def _visit_procedurewriteln(self, node):
         if len(node.children) > 1:
             arg_node = node.children[1]
-            self._visit(arg_node)
-            if self._is_string(arg_node):
-                self.output.append(" " * self.current_identation + "WRITES")
-            else:
-                self.output.append(" " * self.current_identation + "WRITEI")
+            print(f"[DEBUG] Argument node: {arg_node}")
+            for child in arg_node.children:
+                self._visit(child)
+                print(f"[DEBUG] Child node: {child}")
+                print(f"[DEBUG] Child node type: {self._is_string(arg_node)}")
+                if self._is_string(child):
+                    self.output.append(" " * self.current_identation + "WRITES")
+                else:
+                    self.output.append(" " * self.current_identation + "WRITEI")
         self.output.append(" " * self.current_identation + "WRITELN")
 
     def _is_string(self, node):
-        if node.children[0].children[0].children[0].children[0].children[0].children[0].nodetype == "UnsignedConstant":
-            return node.children[0].children[0].children[0].children[0].children[0].children[0].children[0].nodetype == "String"
+        print("[DEBUG] Checking if node is a string")
+        print(f"[DEBUG] Node type: {node}")
+        if node.children[0].children[0].children[0].children[0].children[0].nodetype == "UnsignedConstant":
+            print("ENTREIIIIIDJDJDJDJDJDJJDJDJDJDJDJ")
+            return node.children[0].children[0].children[0].children[0].children[0].children[0].nodetype == "String"
         return False
 
     def _visit_structeredstatement(self, node):
@@ -227,10 +234,20 @@ class CodeGenerator:
                     print(f"--> 2: {node.children[2].children[0]}")
                     print(f"--> 3: {node.children[1]}")
                     self._visit(node.children[0])
-                    self._visit(node.children[2])
+                    self._visit(node.children[2].children[0])
                     self._visit(node.children[1]) # Fiquei aqui a tentar perceber como mudar a ordem da operação
+        else:
+            self._visit_children(node)
 
-        #self._visit_children(node)
+    def _visit_assignment(self, node):
+        print("[DEBUG] Visiting assignment")
+        destination = node.children[0].children[0].children[0]
+        source = node.children[1].children[0].children[0].children[0].children[0].children[0].children[0]
+        print(f"[DEBUG] Destination: {destination}")
+        print(f"[DEBUG] Source: {source}")
+        self.output.append(" " * self.current_identation + f"// Assignment: {destination} := {source}")
+        self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[source]}")  # Pega no valor da variável
+        self.output.append(" " * self.current_identation + f"STOREG {self.var_map[destination]}")  # Armazena o valor na variável de destino
 
     def _visit_term(self, node):
         """Lida com o nó 'Term'."""
