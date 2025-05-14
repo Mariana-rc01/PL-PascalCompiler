@@ -368,7 +368,9 @@ python3 -m Compiler.parser < Tests/testN.pas | python3 -m ASTree.tree_drawer
 python3 -m ASTree.app
 ```
 
-## Conclusões## Referências
+## Conclusões
+
+## Referências
 
 - Enunciado do Projeto (PL).
 - [Máquina virtual EWVM](https://ewvm.epl.di.uminho.pt/)
