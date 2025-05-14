@@ -24,3 +24,27 @@ class ASTNode:
             else:
                 rep += "  " * (level + 1) + str(child) + "\n"
         return rep
+
+    def __eq__(self, other):
+        if not isinstance(other, ASTNode):
+            return False
+        if self.nodetype != other.nodetype:
+            return False
+
+        if isinstance(self.value, str) and isinstance(other.value, str):
+            if self.value != other.value:
+                return False
+
+        elif isinstance(self.value, ASTNode) and isinstance(other.value, ASTNode):
+            if self.value != other.value:
+                return False
+
+        if len(self.children) != len(other.children):
+            return False
+        for i, (a, b) in enumerate(zip(self.children, other.children)):
+            if isinstance(a, ASTNode) and isinstance(b, ASTNode):
+                if a != b:
+                    return False
+            elif a != b:
+                return False
+        return True
