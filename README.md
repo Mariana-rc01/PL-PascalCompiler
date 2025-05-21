@@ -36,6 +36,80 @@
 
 ## Análise Léxica
 
+A análise léxica é a etapa inicial do processo de compilação, é responsável por ler o código-fonte e por
+convertê-lo numa sequência de *tokens*, que são as unidades léxicas básicas da linguagem. Esta fase
+tem como principal objetivo identificar e classificar símbolos como palavras-chave, identificadores,
+operadores, delimitadores e literais (como números, caracteres e strings), onde os comentários e
+espaços em branco são removidos.
+
+No contexto deste projeto, a análise léxica foi implementada utilizando a ferramenta
+**PLY (Python Lex-Yacc)**, que permite definir expressões regulares associadas a funções para
+reconhecer os diferentes *tokens* da linguagem de Pascal.
+
+
+O conjunto de *tokens* definidos reflete os elementos sintáticos de Pascal que foram considerados
+relevantes para o compilador. Para a sua definição, consultámos a especificação oficial da linguagem
+Pascal (ISO 7185:1990), de modo a garantir a conformidade com os padrões da linguagem e a correta
+identificação dos constituintes léxicos. A seguir, apresenta-se a especificação dos *tokens*:
+
+```
+tokens = [
+    PROGRAM, PROCEDURE, FUNCTION, BEGIN, END, FOR, TO, DO, AND, OR,
+    IF, THEN, ELSE, DOWNTO, MOD, DIV, NOT, WHILE, VAR, ARRAY, OF,
+    TRUE, FALSE,
+    identifier, char, string, num_int, num_real,
+    ASSIGN, EQUAL, COLON, GREATER_THAN, LESS_THAN, NOT_EQUAL,
+    GREATER_THAN_EQUAL, LESS_THAN_EQUAL
+]
+```
+
+Além dos *tokens* nomeados, foram definidos também os **símbolos literais**, representados
+diretamente pelos seus próprios caracteres:
+
+```
+literals = [';', ',', '(', ')', '.', '+', '-', '*', '/', '[', ']']
+```
+
+Para cada *token*, foi associada uma expressão regular que permite identificar a ocorrência do mesmo
+no código-fonte. Palavras-chave são reconhecidas por expressões regulares específicas e têm a sua
+classificação fixada (por exemplo, `program`, `var`, `begin`, etc.). Identificadores são definidos
+como sequências de letras, dígitos e _underscore_, desde que comecem por uma letra ou pelo _underscore_.
+
+Exemplos de *tokens* definidos:
+
+```python
+def t_PROGRAM(t):
+    r'\bprogram\b'
+    t.type = 'PROGRAM'
+    return t
+
+def t_identifier(t):
+    r'[a-zA-Z_][a-zA-Z0-9_]*'
+    return t
+
+def t_num_real(t):
+    r'\d+((\.\d+([eE][+-]?\d+)?)|[eE][+-]?\d+)'
+    return t
+
+def t_ASSIGN(t):
+    r':='
+    return t
+```
+
+Também foram implementadas regras para:
+
+1. Ignorar espaços, _tabs_ e quebras de linha (`t_ignore = " \t\n"`);
+2. Ignorar comentários, tanto do tipo `(* ... *)` quanto `{ ... }`, que são descartados sem produzir tokens;
+3. Lidar com erros léxicos, onde caracteres ilegais são reportados e o cursor de análise é avançado para
+continuar o processo e detetar possivelmente mais erros.
+
+A análise léxica é insensível a maiúsculas/minúsculas, como é característico da linguagem Pascal,
+configurada com `reflags = re.IGNORECASE`.
+
+Portanto, a definição do analisador léxico garante uma identificação correta dos constituintes léxicos
+da linguagem e fornece uma sequência válida de *tokens* para ser posteriormente analisada na fase
+seguinte.
+
 ## Análise Sintática
 
 A análise sintática constitui uma das fases fundamentais do processo de compilação, sucedendo à
