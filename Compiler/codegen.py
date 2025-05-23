@@ -5,6 +5,7 @@ class CodeGenerator:
         self.output = []
         self.var_counter = 0 # Perceber qual o endereço a utilizar para a próxima variável
         self.var_map = {} # Mapear o sitio da memória para cada variável
+        self.array_lower_bound_map = {} # Mapear o indice inferior de cada array
         self.label_count = 0
         self.loop_label_count = 0
         self.current_identation = 2
@@ -99,11 +100,28 @@ class CodeGenerator:
     def _visit_varelemdeclaration(self, node):
         """Lida com cada elemento da declaração de variável."""
         print("[DEBUG] Visiting variable element declaration")
-        for child in node.children:
-            if child.nodetype == "IdentifierList":
-                self._visit(child)
-            elif child.nodetype == "Type":
-                pass # Não precisamos da informação do tipo das variáveis, for preciso, temos de criar um visit novo para isso
+        if node.children[1].nodetype == "ArrayType":
+            print(f"SSSSSSSSSSSSSSSS: {node.children[1].children[0].children[1].children[0].children[0].children[0]}")
+            lower_bound = int(str(node.children[1].children[0].children[0].children[0].children[0].children[0]).strip())
+            upper_bound = int(str(node.children[1].children[0].children[1].children[0].children[0].children[0]).strip())
+            print(f"[DEBUG] Lower bound: {lower_bound}")
+            print(f"[DEBUG] Upper bound: {upper_bound}")
+
+            var_name = str(node.children[0].children[0].children[0]).strip()
+            print(f"[DEBUG] Variable name: {var_name}")
+            self.var_map[var_name] = self.var_counter # Adiciona a variável ao mapa com o endereço atual
+            self.array_lower_bound_map[var_name] = lower_bound
+            self.output.append(" " * self.current_identation + f"PUSHI {upper_bound - lower_bound + 1}")
+            self.output.append(" " * self.current_identation + f"ALLOCN // allocate array {var_name}")
+            self.output.append(" " * self.current_identation + f"STOREG {self.var_counter} // declare array {var_name}")
+            self.output.append("") # Adiciona uma nova linha para melhor legibilidade
+            self.var_counter += 1  # Incrementa o contador para a próxima variável
+        else:
+            for child in node.children:
+                if child.nodetype == "IdentifierList":
+                    self._visit(child)
+                elif child.nodetype == "Type":
+                    pass # Não precisamos da informação do tipo das variáveis, for preciso, temos de criar um visit novo para isso
 
     def _visit_identifierlist(self, node):
         """Lida com a lista de identificadores."""
@@ -158,9 +176,21 @@ class CodeGenerator:
         print("[DEBUG] Visiting procedure input")
         self._visit_children(node)  # Visita os filhos (como o argumento)
         var_name = str(node.children[1].children[0].children[0].children[0].children[0].children[0].children[0].children[0].children[0]).strip()
-        self.output.append(" " * self.current_identation + "READ")
-        self.output.append(" " * self.current_identation + "ATOI")
-        self.output.append(" " * self.current_identation + f"STOREG {self.var_map[var_name]}")  # Armazena o valor lido no endereço da variável
+
+        if len(node.children[1].children[0].children[0].children[0].children[0].children[0].children[0].children) > 1: # Se for um array, tem de fazer a diferença para o lower bound e ir buscar o indice
+            position_name = node.children[1].children[0].children[0].children[0].children[0].children[0].children[0].children[1].children[0].children[0].children[0].children[0].children[0].children[0].children[0]
+            self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[var_name]}")
+            self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[position_name]}")
+            self.output.append(" " * self.current_identation + f"// Adapt array index to lower bound")
+            self.output.append(" " * self.current_identation + f"PUSHI {self.array_lower_bound_map[var_name]}")
+            self.output.append(" " * self.current_identation + f"SUB")
+            self.output.append(" " * self.current_identation + "READ")
+            self.output.append(" " * self.current_identation + "ATOI")
+            self.output.append(" " * self.current_identation + f"STOREN")
+        else:
+            self.output.append(" " * self.current_identation + "READ")
+            self.output.append(" " * self.current_identation + "ATOI")
+            self.output.append(" " * self.current_identation + f"STOREG {self.var_map[var_name]}")
 
     def _visit_procedurewriteln(self, node):
         if len(node.children) > 1:
@@ -287,7 +317,7 @@ class CodeGenerator:
         print("[DEBUG] Visiting assignment")
         destination = node.children[0].children[0].children[0]
 
-        print(f"[DEBUG] Expression children len: {len(node.children[1].children[0].children)}")
+        print(f"[DEBUG] Expression children ÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇç: {node}")
 
         if len(node.children[1].children[0].children) > 2:
             source = None
@@ -339,12 +369,28 @@ class CodeGenerator:
 
     def _visit_variable(self, node):
         """Lida com o nó 'Variable' (para variáveis como num1, num2, etc.)."""
-        for child in node.children:
-            if child.nodetype == "Identifier":
-                print(f"Map: {self.var_map}")
-                variable_address = self._get_variable_address(child)
-                if variable_address is not None:
-                    self.output.append(" " * self.current_identation + f"PUSHG {variable_address}")
+        # [TODO] Verificar se é uma variável ou um array
+        print("[DEBUG] Visiting variable")
+
+        if len(node.children) > 1: # Se for um array, tem de fazer a diferença para o lower bound e ir buscar o indice
+            print(f"[DEBUG] OHHHHHHHHHHHHHHHHHHHHHHHHHH: {node.children[0]}")
+            position_name = str(node.children[1].children[0].children[0].children[0].children[0].children[0].children[0].children[0]).strip()
+            var_name = str(node.children[0].children[0]).strip()
+            print(f"[DEBUG] Position name: {position_name}")
+            print(f"[DEBUG] Variable name: {var_name}")
+            self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[var_name]}")
+            self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[position_name]}")
+            self.output.append(" " * self.current_identation + f"// Adapt array index to lower bound")
+            self.output.append(" " * self.current_identation + f"PUSHI {self.array_lower_bound_map[var_name]}")
+            self.output.append(" " * self.current_identation + f"SUB")
+            self.output.append(" " * self.current_identation + "LOADN")
+        else:
+            for child in node.children:
+                if child.nodetype == "Identifier":
+                    print(f"Map: {self.var_map}")
+                    variable_address = self._get_variable_address(child)
+                    if variable_address is not None:
+                        self.output.append(" " * self.current_identation + f"PUSHG {variable_address}")
 
     def _visit_repetitivestatement(self, node):
         """Lida com o nó 'RepetitiveStatement'."""
@@ -360,6 +406,8 @@ class CodeGenerator:
         start_value = node.children[2].children[0].children[0].children[0].children[0].children[0].children[0]
         print(f"[DEBUG] Start value: {start_value}")
         end_variable_name = node.children[4].children[0].children[0].children[0].children[0].children[0].children[0]
+        if node.children[4].children[0].children[0].children[0].children[0].nodetype == "UnsignedConstant":
+            end_variable_name = int(end_variable_name)
         print(f"[DEBUG] End variable name: {end_variable_name}")
 
         self.output.append(" " * self.current_identation + "// For statement")
@@ -373,7 +421,11 @@ class CodeGenerator:
         self.current_identation += 2
 
         self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[iterator_name]}")
-        self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[end_variable_name]}")
+
+        if isinstance(end_variable_name, int):
+            self.output.append(" " * self.current_identation + f"PUSHI {end_variable_name}")
+        else:
+            self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[end_variable_name]}")
         self.output.append(" " * self.current_identation + f"INFEQ")
         self.output.append(" " * self.current_identation + f"JZ {end_label}")
         self.output.append(" " * self.current_identation + f"// For statement body")
