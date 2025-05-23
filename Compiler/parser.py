@@ -469,7 +469,9 @@ if __name__ == '__main__':
     ast = parse_input(text)
     analyzer = SemanticAnalyzer()
     analyzer.analyze(ast)
-    #print(ast)
+    print("AST:")
+    print(ast)
+    print("=" * 20)
 
     if analyzer.errors:
         print("Semantic analysis errors:")

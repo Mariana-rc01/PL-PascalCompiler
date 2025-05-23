@@ -20,6 +20,26 @@ class CodeGenerator:
         name = identifier_node.children[0]
         return self.var_map.get(name, None) # Caso a variável não exista, retorna None para validar onde é chamada
 
+    def _get_operator(self, node):
+        op = str(node).strip().lower()
+        return {
+            '+': 'ADD',
+            '-': 'SUB',
+            '*': 'MUL',
+            '/': 'DIV',
+            'div': 'DIV',
+            'mod': 'MOD',
+            '=': 'EQUAL',
+            '<>': 'NEQ',
+            '<': 'INF',
+            '>': 'SUP',
+            '<=': 'INFEQ',
+            '>=': 'SUPEQ',
+            'and': 'AND',
+            'or': 'OR',
+            'not': 'NOT'
+        }.get(op, f"UNKNOWN_OP({op})")
+
     def _visit(self, node):
         """Visita um nó e chama o método adequado de acordo com seu tipo."""
         if node is None:
@@ -73,7 +93,7 @@ class CodeGenerator:
         """Lida com a lista de declarações de variáveis."""
         print("[DEBUG] Visiting list variable declaration")
         for child in node.children:
-            if child.nodetype == "VarElemDeclaration":
+            if child.nodetype == "VarElemDeclaration" or child.nodetype == "ListVarDeclaration":
                 self._visit(child)
 
     def _visit_varelemdeclaration(self, node):
@@ -167,7 +187,7 @@ class CodeGenerator:
         print("[DEBUG] Visiting conditional statement")
         self._visit_children(node)
 
-    def _visit_ifstatement(self, node): # FIQUEI AQUI, PRECISO DE CORRIGIR O ELSE
+    def _visit_ifstatement(self, node):
         print("[DEBUG] Visiting if statement")
         condition_node = node.children[0]
         then_block = node.children[1]
@@ -183,7 +203,7 @@ class CodeGenerator:
         end_label = f"END{self.label_count}"
         self.label_count += 1
 
-        self._visit(condition_node) # Falta fazer o tratamento do nó com a condição para decidir a próxima instrução
+        self._visit(condition_node)
         self.output.append(" " * self.current_identation + f"JZ {else_label}")
 
         self.current_identation += 2
@@ -208,41 +228,75 @@ class CodeGenerator:
 
     def _visit_relationaloperator(self, node):
         print("[DEBUG] Visiting relational operator")
-        if node.children[0] == ">":
+        op = node.children[0]
+        if op == "<>":
+            self.output.append(" " * self.current_identation + "NEQ")
+        elif op == "<":
+            self.output.append(" " * self.current_identation + "INF")
+        elif op == "<=":
+            self.output.append(" " * self.current_identation + "INFEQ")
+        elif op == ">":
             self.output.append(" " * self.current_identation + "SUP")
+        elif op == ">=":
+            self.output.append(" " * self.current_identation + "SUPEQ")
 
     def _visit_firstpriorityoperator(self, node):
         print("[DEBUG] Visiting first priority operator")
-        if node.children[0] == "*":
+        op = str(node.children[0]).strip().lower()
+        if op == "*":
             self.output.append(" " * self.current_identation + "MUL")
+        elif op == "/":
+            self.output.append(" " * self.current_identation + "DIV")
+        elif op == "div":
+            self.output.append(" " * self.current_identation + "DIV")
+        elif op == "mod":
+            self.output.append(" " * self.current_identation + "MOD")
+        elif op == "and":
+            self.output.append(" " * self.current_identation + "AND")
+
+    def _visit_secondpriorityoperator(self, node):
+        print("[DEBUG] Visiting second priority operator")
+        if node.children[0] == "+":
+            self.output.append(" " * self.current_identation + "ADD")
+        elif node.children[0] == "-":
+            self.output.append(" " * self.current_identation + "SUB")
 
     def _visit_else(self, node):
         """Lida com o bloco do 'else'."""
-        self._visit_children(node)  # Executa os filhos (como o bloco 'else')
+        self._visit_children(node)
 
     def _visit_expression(self, node):
-        """Lida com o nó 'Expression'."""
-        print("ENTREI AQUI NA EXPRESSIONNNNNNNNNNNNNNNNNNNNNNNNNNNNNNnn")
-        print(f"[DEBUG] Visiting expression: {node}")
-        if len(node.children) > 1:
-            if node.children[1].nodetype == "Operator":
-                print(f"[DEBUG] FFFFFFFFFFFFFFFFFFFFFFFF {node.children[1].children[0]}")
-                if node.children[1].children[0].nodetype == "RelationalOperator":
-                    self._visit(node.children[0])
-                    self._visit(node.children[2].children[0])
-                    self._visit(node.children[1])
+        print("[DEBUG] Visiting expression")
+        if len(node.children) == 1:
+            self._visit(node.children[0])
         else:
-            self._visit_children(node)
+            self._visit(node.children[0])
+            self._visit(node.children[2])
+            self.output.append(" " * self.current_identation + self._get_operator(node.children[1].children[0].children[0]))
+
+    def _visit_simpleexpression(self, node):
+        print("[DEBUG] Visiting simple expression")
+        if len(node.children) == 1:
+            self._visit(node.children[0])
+        else:
+            self._visit(node.children[0])
+            self._visit(node.children[2])
+            self.output.append(" " * self.current_identation + self._get_operator(node.children[1].children[0].children[0]))
 
     def _visit_assignment(self, node):
         print("[DEBUG] Visiting assignment")
         destination = node.children[0].children[0].children[0]
 
-        print(f"[SOURCE] All content: {node.children[1].children[0].children[0]}")
+        print(f"[DEBUG] Expression children len: {len(node.children[1].children[0].children)}")
 
-        if len(node.children[1].children[0].children[0].children) > 1:
+        if len(node.children[1].children[0].children) > 2:
+            source = None
+            self._visit(node.children[1].children[0])
+        elif len(node.children[1].children[0].children[0].children) > 1:
             source = None
             self._visit_children(node.children[1].children[0])
+        elif node.children[1].children[0].children[0].children[0].children[0] == "true" or node.children[1].children[0].children[0].children[0].children[0] == "false":
+            source = node.children[1].children[0].children[0].children[0].children[0]
         else:
             source = node.children[1].children[0].children[0].children[0].children[0].children[0].children[0]
 
@@ -251,6 +305,11 @@ class CodeGenerator:
         self.output.append(" " * self.current_identation + f"// Assignment: {destination} := {source}")
         if source is None:
             pass
+        elif node.children[1].children[0].children[0].children[0].children[0] == "true" or node.children[1].children[0].children[0].children[0].children[0] == "false":
+            if source == "true":
+                self.output.append(" " * self.current_identation + "PUSHI 1")
+            if source == "false":
+                self.output.append(" " * self.current_identation + "PUSHI 0")
         elif node.children[1].children[0].children[0].children[0].children[0].children[0].nodetype == "Num_Int":
             self.output.append(" " * self.current_identation + f"PUSHI {source}")  # Pega no valor do número
         else:
@@ -258,18 +317,13 @@ class CodeGenerator:
         self.output.append(" " * self.current_identation + f"STOREG {self.var_map[destination]}")  # Armazena o valor na variável de destino
 
     def _visit_term(self, node):
-        """Lida com o nó 'Term'."""
         print("[DEBUG] Visiting term")
-        print(f"[DEBUG] AQUIIII Term: {node}")
-        if len(node.children) > 1:
-            if node.children[1].nodetype == "Operator":
-                print(f"[DEBUG] FFFFFFFFFFFFFFFFFFFFFFFF {node.children[1].children[0]}")
-                if node.children[1].children[0].nodetype == "FirstPriorityOperator":
-                    self._visit(node.children[0])
-                    self._visit(node.children[2])
-                    self._visit(node.children[1])
+        if len(node.children) == 1:
+            self._visit(node.children[0])
         else:
-            self._visit_children(node)
+            self._visit(node.children[0])
+            self._visit(node.children[2])
+            self.output.append(" " * self.current_identation + self._get_operator(node.children[1].children[0].children[0]))
 
     def _visit_factor(self, node):
         """Lida com o nó 'Factor'."""
@@ -280,11 +334,14 @@ class CodeGenerator:
         for child in node.children:
             if child.nodetype == "String":
                 self.output.append(" " * self.current_identation + f'PUSHS "{child.children[0]}"')
+            elif child.nodetype == "Num_Int":
+                self.output.append(" " * self.current_identation + f"PUSHI {child.children[0]}")
 
     def _visit_variable(self, node):
         """Lida com o nó 'Variable' (para variáveis como num1, num2, etc.)."""
         for child in node.children:
             if child.nodetype == "Identifier":
+                print(f"Map: {self.var_map}")
                 variable_address = self._get_variable_address(child)
                 if variable_address is not None:
                     self.output.append(" " * self.current_identation + f"PUSHG {variable_address}")
@@ -335,3 +392,23 @@ class CodeGenerator:
         self.output.append(" " * self.current_identation + f"{end_label}:")
         self.output.append(" " * self.current_identation + "// End of for statement")
         self.output.append("")
+
+    def _visit_whilestatement(self, node):
+        """Lida com o nó 'WhileStatement'."""
+        print("[DEBUG] Visiting while statement")
+
+        start_label = f"WHILE{self.loop_label_count}"
+        end_label = f"ENDWHILE{self.loop_label_count}"
+        self.loop_label_count += 1
+
+        self.output.append(" " * self.current_identation + f"{start_label}:")
+
+        self.current_identation += 2
+        self._visit(node.children[0])  # Condição do while
+        self.output.append(" " * self.current_identation + f"JZ {end_label}")
+        self.output.append(" " * self.current_identation + f"// While statement body")
+        self._visit(node.children[2])
+        self.output.append(" " * self.current_identation + f"JUMP {start_label}")
+        self.current_identation -= 2
+
+        self.output.append(" " * self.current_identation + f"{end_label}:")
