@@ -29,6 +29,18 @@ class SemanticAnalyzer:
             'readln': {
                 'type': 'procedure',
                 'variadic': True
+            },
+            'ReadLn': {
+                'type': 'procedure',
+                'variadic': True
+            },
+            'Write': {
+                'type': 'procedure',
+                'variadic': True
+            },
+            'WriteLn': {
+                'type': 'procedure',
+                'variadic': True
             }
         })
     
@@ -96,6 +108,41 @@ class SemanticAnalyzer:
         if main_block:
             self._visit(main_block)
 
+    def _visit_FunctionCall(self, node):
+        func_name = str(node.children[0].children[0]).strip()
+        args_node = node.children[1] if len(node.children) > 1 else None
+        received_args = args_node.children if args_node else []
+
+        func_info = self.symbol_table[0].get(func_name)
+        if func_info is None:
+            self.errors.append(f"Function '{func_name}' not declared.")
+            return
+
+        expected_params = func_info.get('params', [])
+        if len(received_args) != len(expected_params):
+            self.errors.append(
+                f"Function '{func_name}' expects {len(expected_params)} argument(s), "
+                f"but got {len(received_args)}."
+            )
+            return
+
+        for i, (arg_node, (expected_name, expected_type)) in enumerate(zip(received_args, expected_params)):
+            arg_type = self._get_expression_type(arg_node)
+
+            if isinstance(expected_type, dict) and expected_type.get('type') == 'array' and expected_type.get('element_type') == 'char':
+                expected_type_str = 'string'
+            else:
+                expected_type_str = expected_type
+
+            if arg_type == 'string' and expected_type_str == 'string':
+                continue
+
+            if arg_type != expected_type_str:
+                self.errors.append(
+                    f"Type mismatch for argument {i + 1} in call to '{func_name}': "
+                    f"expected '{expected_type_str}', got '{arg_type}'."
+                )
+
 
     def _visit_ProcedureDeclaration(self, node):
         # Similar to function, but without return type
@@ -131,7 +178,6 @@ class SemanticAnalyzer:
         var_type_node = node.children[1]
 
         if var_type_node.nodetype == 'ArrayType':
-            # Handle array declaration and check bounds
             index_range_node = var_type_node.children[0]
             low_node = index_range_node.children[0]
             high_node = index_range_node.children[1]
@@ -173,7 +219,6 @@ class SemanticAnalyzer:
                         'HighBound': high_value
                     }
         else:
-            # Regular variable declaration
             if var_type_node and var_type_node.children and var_type_node.children[0] is not None:
                 type_node = var_type_node.children[0]
                 if hasattr(type_node, 'value') and type_node.value is not None:
@@ -188,7 +233,7 @@ class SemanticAnalyzer:
                 return
 
             for identifier_node in identifier_list.children:
-                var_name = identifier_node.children[0].nodetype
+                var_name = str(identifier_node.children[0]).strip()
                 if var_name in self.current_scope:
                     self.errors.append(f"Variable '{var_name}' already declared.")
                 else:
@@ -201,6 +246,7 @@ class SemanticAnalyzer:
                         }
                     else:
                         self.current_scope[var_name] = var_type
+
 
     def _visit_Assignment(self, node):
         var_type = self._get_expression_type(node.children[0])
@@ -229,7 +275,6 @@ class SemanticAnalyzer:
             if proc_name == 'readln':
                 for i, arg_node in enumerate(received_args):
                     expr_node = arg_node.children[0].children[0].children[0].children[0].children[0] if arg_node.nodetype == 'Arg' else arg_node
-                    print(f"readln actual node type: {expr_node.nodetype}")
                     if expr_node.nodetype != 'Variable':
                         self.errors.append(f"Argument {i+1} in 'readln' must be a variable.")
                     else:
@@ -264,8 +309,6 @@ class SemanticAnalyzer:
                     f"Type mismatch for argument {i + 1} in call to '{proc_name}': "
                     f"expected '{expected_type_str}', got '{arg_type}'."
                 )
-
-
 
     def _visit_IfStatement(self, node):
         # Validate that condition is boolean
@@ -374,7 +417,10 @@ class SemanticAnalyzer:
 
                 if isinstance(var_info, dict) and var_info.get('type') == 'array':
                     if indices_node is None:
-                        return 'string' if var_info.get('element_type') == 'char' else None
+                        if var_info.get('element_type') == 'char':
+                            return 'string'
+                        else:
+                            return None
 
                     if indices_node.nodetype != 'ListExpressions':
                         self.errors.append(f"Invalid index expression for array '{var_name}'.")
@@ -395,6 +441,12 @@ class SemanticAnalyzer:
                     return var_info.lower()
 
                 return None
+                
+        if node.nodetype == 'FunctionCall':
+            self._visit_FunctionCall(node)
+            func_name = str(node.children[0].children[0]).strip()
+            func_info = self.symbol_table[0].get(func_name)
+            return func_info.get('return_type') if func_info else None
 
         # Binary expressions
         if node.nodetype in ('Expression', 'SimpleExpression', 'Term', 'Factor') and len(node.children) == 3:
