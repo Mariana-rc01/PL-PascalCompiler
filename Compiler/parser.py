@@ -190,6 +190,14 @@ def p_SimpleStatement_ProcedureStatement(p):
     "SimpleStatement : ProcedureStatement"
     p[0] = ASTNode("SimpleStatement", [p[1]])
 
+def p_SimpleStatement_break(p):
+    "SimpleStatement : BREAK"
+    p[0] = ASTNode("SimpleStatement", [ASTNode("Break")])
+
+def p_SimpleStatement_continue(p):
+    "SimpleStatement : CONTINUE"
+    p[0] = ASTNode("SimpleStatement", [ASTNode("Continue")])
+
 def p_AssignmentStatement(p):
     "AssignmentStatement : Variable ASSIGN Expression"
     p[0] = ASTNode("Assignment", [p[1], p[3]])

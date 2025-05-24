@@ -17,6 +17,11 @@ begin
             valor := valor + potencia;
         
         potencia := potencia * 2;
+        if bin[i] = '0' then
+        begin
+            potencia := potencia * 2;
+            continue;
+        end;
     end;
     
     BinToInt := valor;
