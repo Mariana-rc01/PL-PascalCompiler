@@ -8,11 +8,30 @@ class SemanticAnalyzer:
         self.errors = []
 
     def analyze(self, ast_node):
-        # Start semantic analysis from the root AST node
-        self.symbol_table.append(self.current_scope)
-        self._visit(ast_node)
-        return self.errors
+        self.symbol_table = [{}]
+        self.current_scope = self.symbol_table[0]
+        self.errors = []
+        self._initialize_builtins()
 
+        if ast_node.nodetype != 'Program':
+            self.errors.append("Root node must be of type 'Program'.")
+        else:
+            self._visit(ast_node)
+
+        return self.errors
+    
+    def _initialize_builtins(self):
+        self.symbol_table[0].update({
+            'writeln': {
+                'type': 'procedure',
+                'variadic': True
+            },
+            'readln': {
+                'type': 'procedure',
+                'variadic': True
+            }
+        })
+    
     def _visit(self, node):
         # Dynamically dispatch to a specific visit method based on node type
         method_name = f'_visit_{node.nodetype}'
@@ -62,6 +81,21 @@ class SemanticAnalyzer:
         # Restore previous scope
         self.symbol_table.pop()
         self.current_scope = self.symbol_table[-1]
+
+    def _visit_Program(self, node):
+        declarations = node.children[1] if len(node.children) > 1 else None
+        subprograms = node.children[2] if len(node.children) > 2 else None
+        main_block = node.children[3] if len(node.children) > 3 else None
+
+        if declarations:
+            self._visit(declarations)
+
+        if subprograms:
+            self._visit(subprograms)
+
+        if main_block:
+            self._visit(main_block)
+
 
     def _visit_ProcedureDeclaration(self, node):
         # Similar to function, but without return type
@@ -114,7 +148,15 @@ class SemanticAnalyzer:
             base_type_node = var_type_node.children[1]
             if base_type_node.children and base_type_node.children[0] is not None:
                 base_type_child = base_type_node.children[0]
-                base_type = base_type_child.value.lower() if hasattr(base_type_child, 'value') else base_type_child.nodetype.lower()
+                if base_type_child is not None:
+                    base_type = (base_type_child.value.lower() if hasattr(base_type_child, 'value') and base_type_child.value is not None 
+                                else (base_type_child.nodetype.lower() if hasattr(base_type_child, 'nodetype') else None))
+                    if base_type is None:
+                        self.errors.append("Invalid base type in array declaration.")
+                        return
+                else:
+                    self.errors.append("Invalid base type in array declaration.")
+                    return
             else:
                 self.errors.append("Invalid base type in array declaration.")
                 return
@@ -161,16 +203,69 @@ class SemanticAnalyzer:
                         self.current_scope[var_name] = var_type
 
     def _visit_Assignment(self, node):
-        # Type checking for assignment statement
         var_type = self._get_expression_type(node.children[0])
         expr_type = self._get_expression_type(node.children[1])
-        if var_type and expr_type and var_type != expr_type:
-            self.errors.append(f"Incompatible type: '{var_type}' vs '{expr_type}'.")
+
+        if var_type and expr_type:
+            if var_type == expr_type:
+                return
+            elif var_type == 'real' and expr_type == 'integer':
+                return
+            else:
+                self.errors.append(f"Incompatible type: '{var_type}' vs '{expr_type}'.")
+
 
     def _visit_ProcedureCall(self, node):
-        # Evaluate argument expressions for type correctness
-        for arg in node.children[1].children:
-            self._get_expression_type(arg)
+        proc_name = str(node.children[0].children[0]).strip()
+        args_node = node.children[1] if len(node.children) > 1 else None
+        received_args = args_node.children if args_node else []
+
+        proc_info = self.symbol_table[0].get(proc_name)
+        if proc_info is None:
+            self.errors.append(f"Procedure or function '{proc_name}' not declared.")
+            return
+
+        if proc_info.get('variadic'):
+            if proc_name == 'readln':
+                for i, arg_node in enumerate(received_args):
+                    expr_node = arg_node.children[0].children[0].children[0].children[0].children[0] if arg_node.nodetype == 'Arg' else arg_node
+                    print(f"readln actual node type: {expr_node.nodetype}")
+                    if expr_node.nodetype != 'Variable':
+                        self.errors.append(f"Argument {i+1} in 'readln' must be a variable.")
+                    else:
+                        var_type = self._get_expression_type(expr_node)
+                        if var_type is None:
+                            self.errors.append(f"Undeclared variable in argument {i+1} of 'readln'.")
+            elif proc_name == 'writeln':
+                for i, arg_node in enumerate(received_args):
+                    arg_type = self._get_expression_type(arg_node)
+                    if arg_type is None:
+                        self.errors.append(f"Unrecognized type in argument {i+1} of 'writeln'.")
+            return
+
+        expected_params = proc_info.get('params', [])
+        if len(received_args) != len(expected_params):
+            self.errors.append(
+                f"Procedure/function '{proc_name}' expects {len(expected_params)} argument(s), "
+                f"but got {len(received_args)}."
+            )
+            return
+
+        for i, (arg_node, (expected_name, expected_type)) in enumerate(zip(received_args, expected_params)):
+            arg_type = self._get_expression_type(arg_node)
+
+            if isinstance(expected_type, dict):
+                expected_type_str = expected_type.get('element_type', 'unknown')
+            else:
+                expected_type_str = expected_type
+
+            if arg_type != expected_type_str:
+                self.errors.append(
+                    f"Type mismatch for argument {i + 1} in call to '{proc_name}': "
+                    f"expected '{expected_type_str}', got '{arg_type}'."
+                )
+
+
 
     def _visit_IfStatement(self, node):
         # Validate that condition is boolean
@@ -308,10 +403,13 @@ class SemanticAnalyzer:
             right_type = self._get_expression_type(node.children[2])
 
             if operator in ('+', '-', '*', '/'):
+                if operator == '/':
+                    if left_type in ('integer', 'real') and right_type in ('integer', 'real'):
+                        return 'real'
                 if left_type == right_type and left_type in ('integer', 'real'):
                     return left_type
                 elif {left_type, right_type} <= {'integer', 'real'}:
-                    return 'real'  # Mixed int/real returns real
+                    return 'real'
                 self.errors.append(f"Arithmetic operator '{operator}' requires operands of type integer or real.")
                 return None
 
@@ -322,16 +420,21 @@ class SemanticAnalyzer:
                 return None
 
             if operator in ('=', '<>', '<', '>', '<=', '>='):
+                numeric_types = {'integer', 'real'}
                 if left_type == right_type:
                     return 'boolean'
-                self.errors.append(f"Comparison '{operator}' requires operands of the same type.")
-                return None
+                elif left_type in numeric_types and right_type in numeric_types:
+                    return 'boolean'
+                else:
+                    self.errors.append(f"Comparison '{operator}' requires operands of compatible numeric types or the same type.")
+                    return None
 
             if operator in ('and', 'or'):
                 if left_type == right_type == 'boolean':
                     return 'boolean'
                 self.errors.append(f"Logical operator '{operator}' requires boolean operands.")
                 return None
+
 
         # Unary expression (e.g., not)
         if node.nodetype == 'Factor' and len(node.children) == 2:
