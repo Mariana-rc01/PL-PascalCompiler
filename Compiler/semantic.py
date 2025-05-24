@@ -112,7 +112,12 @@ class SemanticAnalyzer:
                 self.errors.append("Array bounds must be constant expressions.")
 
             base_type_node = var_type_node.children[1]
-            base_type = base_type_node.children[0].nodetype.lower()
+            if base_type_node.children and base_type_node.children[0] is not None:
+                base_type_child = base_type_node.children[0]
+                base_type = base_type_child.value.lower() if hasattr(base_type_child, 'value') else base_type_child.nodetype.lower()
+            else:
+                self.errors.append("Invalid base type in array declaration.")
+                return
 
             for identifier_node in identifier_list.children:
                 var_name = str(identifier_node.children[0]).strip()
@@ -127,14 +132,25 @@ class SemanticAnalyzer:
                     }
         else:
             # Regular variable declaration
-            var_type = var_type_node.children[0].nodetype.lower()
+            if var_type_node and var_type_node.children and var_type_node.children[0] is not None:
+                type_node = var_type_node.children[0]
+                if hasattr(type_node, 'value') and type_node.value is not None:
+                    var_type = type_node.value.lower()
+                elif hasattr(type_node, 'nodetype') and type_node.nodetype is not None:
+                    var_type = type_node.nodetype.lower()
+                else:
+                    self.errors.append("Unrecognized type node in variable declaration.")
+                    return
+            else:
+                self.errors.append("Invalid or missing type in variable declaration.")
+                return
+
             for identifier_node in identifier_list.children:
                 var_name = identifier_node.children[0].nodetype
                 if var_name in self.current_scope:
                     self.errors.append(f"Variable '{var_name}' already declared.")
                 else:
                     if var_type == 'string':
-                        # Strings are treated as char arrays
                         self.current_scope[var_name] = {
                             'type': 'array',
                             'element_type': 'char',
@@ -196,11 +212,14 @@ class SemanticAnalyzer:
         loop_body = node.children[6]
 
         # Check if loop makes logical sense with constant bounds
-        start_value = self._get_expression_type(start_expr) == 'integer'
-        end_value = self._get_expression_type(end_expr) == 'integer'
+        start_value = int(start_expr.value) if start_expr.nodetype == 'Num_Int' else None
+        end_value = int(end_expr.value) if end_expr.nodetype == 'Num_Int' else None
 
-        if start_value is False or end_value is False:
-            self.errors.append("FOR loop bounds must be constant expressions.")
+        if start_value is not None and end_value is not None:
+            if direction == 'TO' and start_value > end_value:
+                self.errors.append("FOR loop will never execute: start > end with 'TO'.")
+            elif direction == 'DOWNTO' and start_value < end_value:
+                self.errors.append("FOR loop will never execute: start < end with 'DOWNTO'.")
 
         self._visit(loop_body)
 
@@ -231,13 +250,15 @@ class SemanticAnalyzer:
 
     def _get_expression_type(self, node):
         # Determine the resulting type of an expression
-        if isinstance(node, str) and node in ('true', 'false'):
-            return 'boolean'
         if isinstance(node, str):
+            if node in ('true', 'false'):
+                return 'boolean'
             return 'char'
 
-        if node.nodetype in ('Num_Int',):
+        if node.nodetype == 'Num_Int':
             return 'integer'
+        if node.nodetype == 'Num_Real':
+            return 'real'
         if node.nodetype == 'String':
             return 'string'
         if node.nodetype == 'Boolean':
@@ -247,49 +268,72 @@ class SemanticAnalyzer:
         if node.nodetype == 'Variable':
             identifier_node = node.children[0]
             indices_node = node.children[1] if len(node.children) > 1 else None
+
             if identifier_node.nodetype == 'Identifier':
                 var_name = str(identifier_node.children[0]).strip()
                 var_info = self.current_scope.get(var_name)
+
+                if var_info is None:
+                    self.errors.append(f"Variable '{var_name}' is not declared.")
+                    return None
+
                 if isinstance(var_info, dict) and var_info.get('type') == 'array':
                     if indices_node is None:
                         return 'string' if var_info.get('element_type') == 'char' else None
+
                     if indices_node.nodetype != 'ListExpressions':
                         self.errors.append(f"Invalid index expression for array '{var_name}'.")
                         return None
+
                     if len(indices_node.children) != 1:
                         self.errors.append(f"Array '{var_name}' expects one index.")
                         return None
+
                     index_type = self._get_expression_type(indices_node.children[0])
                     if index_type not in ('integer', 'char'):
                         self.errors.append(f"Index for array '{var_name}' must be integer or char.")
                         return None
-                    return var_info.get('element_type')
-                if var_info is None:
-                    self.errors.append(f"Variable '{var_name}' is not declared.")
-                    return None
-                return var_info.lower() if isinstance(var_info, str) else None
 
-        # Handle binary and unary expressions
+                    return var_info.get('element_type')
+
+                if isinstance(var_info, str):
+                    return var_info.lower()
+
+                return None
+
+        # Binary expressions
         if node.nodetype in ('Expression', 'SimpleExpression', 'Term', 'Factor') and len(node.children) == 3:
             left_type = self._get_expression_type(node.children[0])
             operator = node.children[1].children[0].children[0]
             right_type = self._get_expression_type(node.children[2])
-            if operator in ('+', '-', '*', '/', 'div', 'mod'):
-                if left_type == right_type == 'integer':
-                    return 'integer'
-                self.errors.append(f"Arithmetic operator '{operator}' requires integers.")
-                return None
-            elif operator in ('=', '<>', '<', '>', '<=', '>='):
-                if left_type == right_type:
-                    return 'boolean'
-                self.errors.append(f"Comparison '{operator}' requires same operand types.")
-                return None
-            elif operator in ('and', 'or'):
-                if left_type == right_type == 'boolean':
-                    return 'boolean'
-                self.errors.append(f"Logical operator '{operator}' requires booleans.")
+
+            if operator in ('+', '-', '*', '/'):
+                if left_type == right_type and left_type in ('integer', 'real'):
+                    return left_type
+                elif {left_type, right_type} <= {'integer', 'real'}:
+                    return 'real'  # Mixed int/real returns real
+                self.errors.append(f"Arithmetic operator '{operator}' requires operands of type integer or real.")
                 return None
 
+            if operator in ('div', 'mod'):
+                if left_type == right_type == 'integer':
+                    return 'integer'
+                self.errors.append(f"Operator '{operator}' requires integer operands.")
+                return None
+
+            if operator in ('=', '<>', '<', '>', '<=', '>='):
+                if left_type == right_type:
+                    return 'boolean'
+                self.errors.append(f"Comparison '{operator}' requires operands of the same type.")
+                return None
+
+            if operator in ('and', 'or'):
+                if left_type == right_type == 'boolean':
+                    return 'boolean'
+                self.errors.append(f"Logical operator '{operator}' requires boolean operands.")
+                return None
+
+        # Unary expression (e.g., not)
         if node.nodetype == 'Factor' and len(node.children) == 2:
             if node.children[0].nodetype == 'Not':
                 operand_type = self._get_expression_type(node.children[1])
@@ -298,11 +342,12 @@ class SemanticAnalyzer:
                 self.errors.append("Operator 'not' requires a boolean operand.")
                 return None
 
-        # Fallback: recursively resolve single-child nodes
+        # Recursively resolve single-child expressions
         if len(node.children) == 1:
             return self._get_expression_type(node.children[0])
 
         return None
+
 
     def _process_parameters(self, params_node):
         # Extract and format parameters into a list of tuples
