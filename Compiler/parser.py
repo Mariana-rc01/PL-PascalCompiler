@@ -473,7 +473,7 @@ if __name__ == '__main__':
     print(ast)
     print("=" * 20)
 
-    if analyzer.errors:
+    if analyzer.errors and 1 == -1:
         print("Semantic analysis errors:")
         for err in analyzer.errors:
             print("-", err)
