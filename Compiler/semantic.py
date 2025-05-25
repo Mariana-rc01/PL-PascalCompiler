@@ -30,15 +30,7 @@ class SemanticAnalyzer:
                 'type': 'procedure',
                 'variadic': True
             },
-            'ReadLn': {
-                'type': 'procedure',
-                'variadic': True
-            },
-            'Write': {
-                'type': 'procedure',
-                'variadic': True
-            },
-            'WriteLn': {
+            'write': {
                 'type': 'procedure',
                 'variadic': True
             }
@@ -75,7 +67,7 @@ class SemanticAnalyzer:
         # Process parameters and add function to global scope
         param_list = self._process_parameters(params_node)
         return_type = return_type_node.lower()
-        self.symbol_table[0][func_name] = {
+        self.symbol_table[0][func_name.lower()] = {
             'type': 'function',
             'params': param_list,
             'return_type': return_type
@@ -94,6 +86,9 @@ class SemanticAnalyzer:
         self.symbol_table.pop()
         self.current_scope = self.symbol_table[-1]
 
+    def normalize_identifier(name):
+        return name.lower()
+
     def _visit_Program(self, node):
         declarations = node.children[1] if len(node.children) > 1 else None
         subprograms = node.children[2] if len(node.children) > 2 else None
@@ -109,7 +104,7 @@ class SemanticAnalyzer:
             self._visit(main_block)
 
     def _visit_FunctionCall(self, node):
-        func_name = str(node.children[0].children[0]).strip()
+        func_name = str(node.children[0].children[0]).strip().lower()
         args_node = node.children[1] if len(node.children) > 1 else None
         received_args = args_node.children if args_node else []
 
@@ -247,7 +242,6 @@ class SemanticAnalyzer:
                     else:
                         self.current_scope[var_name] = var_type
 
-
     def _visit_Assignment(self, node):
         var_type = self._get_expression_type(node.children[0])
         expr_type = self._get_expression_type(node.children[1])
@@ -260,9 +254,8 @@ class SemanticAnalyzer:
             else:
                 self.errors.append(f"Incompatible type: '{var_type}' vs '{expr_type}'.")
 
-
     def _visit_ProcedureCall(self, node):
-        proc_name = str(node.children[0].children[0]).strip()
+        proc_name = str(node.children[0].children[0]).strip().lower()
         args_node = node.children[1] if len(node.children) > 1 else None
         received_args = args_node.children if args_node else []
 

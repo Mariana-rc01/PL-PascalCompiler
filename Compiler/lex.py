@@ -28,8 +28,6 @@ tokens = [
     'OF',
     'TRUE',
     'FALSE',
-    'CONTINUE',
-    'BREAK',
     'identifier',
     'char',
     'string',
@@ -159,17 +157,6 @@ def t_FALSE(t):
     r'\bfalse\b'
     t.type = 'FALSE'
     return t
-
-def t_CONTINUE(t):
-    r'\bcontinue\b'
-    t.type = 'CONTINUE'
-    return t
-
-def t_BREAK(t):
-    r'\bbreak\b'
-    t.type = 'BREAK'
-    return t
-
 
 # Regras para tokens
 def t_identifier(t):
