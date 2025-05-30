@@ -470,7 +470,7 @@ if __name__ == '__main__':
     analyzer = SemanticAnalyzer()
     analyzer.analyze(ast)
     print("AST:")
-    print(ast)
+    #print(ast)
     print("=" * 20)
 
     if analyzer.errors and 1 == -1:

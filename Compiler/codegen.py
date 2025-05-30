@@ -10,12 +10,15 @@ class CodeGenerator:
         self.label_count = 0
         self.loop_label_count = 0
         self.current_identation = 2
+        self.output_functions = []
+        self.function_params = {}  # Mapear o numero de parâmetros de cada função
+        self.function_map = {}  # Mapear o tipo de retorno de cada função
 
     def generate(self, ast_root):
         self.output.append("START\n")
         self._visit(ast_root)
         self.output.append("\nSTOP")
-        return "\n".join(self.output)
+        return "\n".join(self.output + self.output_functions)
 
     def _get_variable_address(self, identifier_node):
         """Determina o endereço da variável baseado no nome do identificador."""
@@ -101,8 +104,6 @@ class CodeGenerator:
     def _visit_varelemdeclaration(self, node):
         """Lida com cada elemento da declaração de variável."""
         print("[DEBUG] Visiting variable element declaration")
-
-        print(f"[DEBUG] Node childrenNNNNNNNNNNNNNNNNNNNNNNNN: {node}")
 
         if node.children[1].nodetype == "ArrayType":
             lower_bound = int(str(node.children[1].children[0].children[0].children[0].children[0].children[0]).strip())
@@ -239,12 +240,6 @@ class CodeGenerator:
         then_block = node.children[1]
         else_block = node.children[2] if len(node.children) > 2 else None
 
-        print("=" * 20)
-        print(f"Condition: {condition_node}")
-        print(f"Then block: {then_block}")
-        print(f"Else block: {else_block}")
-        print("=" * 20)
-
         else_label = f"ELSE{self.label_count}"
         end_label = f"END{self.label_count}"
         self.label_count += 1
@@ -333,7 +328,11 @@ class CodeGenerator:
         print("[DEBUG] Visiting assignment")
         destination = node.children[0].children[0].children[0]
 
-        print(f"[DEBUG] Expression children ÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇç: {node}")
+        # Verificar se o destination é o mesmo nome que uma função, se sim, é um return
+        is_function_destination = False
+        # ver se o destination é uma função
+        if destination in self.function_params:
+            is_function_destination = True
 
         if len(node.children[1].children[0].children) > 2:
             source = None
@@ -346,11 +345,18 @@ class CodeGenerator:
         else:
             source = node.children[1].children[0].children[0].children[0].children[0].children[0].children[0]
 
-        print(f"[DEBUG] Destination: {destination}")
-        print(f"[DEBUG] Source: {source}")
+        is_function_source = False
+        if str(source).strip() in self.function_map:
+            is_function_source = True
+
         self.output.append(" " * self.current_identation + f"// Assignment: {destination} := {source}")
         if source is None:
             pass
+        elif is_function_destination:  # Se for um return de uma função, tem de ser tratado de forma diferente
+            if self.function_map[destination] == "integer":
+                self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[source]}")
+            elif self.function_map[destination] == "string":
+                self.output.append(" " * self.current_identation + f"PUSHS {self.var_map[source]}")
         elif node.children[1].children[0].children[0].children[0].children[0] == "true" or node.children[1].children[0].children[0].children[0].children[0] == "false":
             if source == "true":
                 self.output.append(" " * self.current_identation + "PUSHI 1")
@@ -359,8 +365,14 @@ class CodeGenerator:
         elif node.children[1].children[0].children[0].children[0].children[0].children[0].nodetype == "Num_Int":
             self.output.append(" " * self.current_identation + f"PUSHI {source}")  # Pega no valor do número
         else:
-            self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[source]}")  # Pega no valor da variável
-        self.output.append(" " * self.current_identation + f"STOREG {self.var_map[destination]}")  # Armazena o valor na variável de destino
+            if is_function_source:
+                self.output.append(" " * self.current_identation + f"PUSHA {str(source).strip()}")
+                self.output.append(" " * self.current_identation + f"CALL")
+            else:
+                self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[source]}")  # Pega no valor da variável
+
+        if not is_function_destination:
+            self.output.append(" " * self.current_identation + f"STOREG {self.var_map[destination]}")  # Armazena o valor na variável de destino
 
     def _visit_term(self, node):
         print("[DEBUG] Visiting term")
@@ -403,11 +415,8 @@ class CodeGenerator:
         print("[DEBUG] Visiting variable")
 
         if len(node.children) > 1: # Se for um array, tem de fazer a diferença para o lower bound e ir buscar o indice
-            print(f"[DEBUG] OHHHHHHHHHHHHHHHHHHHHHHHHHH: {node.children[0]}")
             position_name = str(node.children[1].children[0].children[0].children[0].children[0].children[0].children[0].children[0]).strip()
             var_name = str(node.children[0].children[0]).strip()
-            print(f"[DEBUG] Position name: {position_name}")
-            print(f"[DEBUG] Variable name: {var_name}")
             self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[var_name]}")
             self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[position_name]}")
             self.output.append(" " * self.current_identation + f"// Adapt array index to lower bound")
@@ -423,7 +432,6 @@ class CodeGenerator:
         else:
             for child in node.children:
                 if child.nodetype == "Identifier":
-                    print(f"Map: {self.var_map}")
                     variable_address = self._get_variable_address(child)
                     if variable_address is not None:
                         self.output.append(" " * self.current_identation + f"PUSHG {variable_address}")
@@ -438,17 +446,13 @@ class CodeGenerator:
         print("[DEBUG] Visiting for statement")
 
         iterator_name = node.children[0].children[0].nodetype
-        print(f"[DEBUG] Iterator: {iterator_name}")
         if node.children[2].children[0].children[0].children[0].children[0].nodetype == "FunctionCall":
             start_value = node.children[2].children[0].children[0].children[0].children[0]
-            print(f"[DEBUG] Start value is a function call: {start_value}")
         else:
             start_value = int(node.children[2].children[0].children[0].children[0].children[0].children[0].children[0])
-        print(f"[DEBUG] Start value: {start_value}")
         end_variable_name = node.children[4].children[0].children[0].children[0].children[0].children[0].children[0]
         if node.children[4].children[0].children[0].children[0].children[0].nodetype == "UnsignedConstant":
             end_variable_name = int(end_variable_name)
-        print(f"[DEBUG] End variable name: {end_variable_name}")
 
         self.output.append(" " * self.current_identation + "// For statement")
         init_label = f"LOOP{self.loop_label_count}"
@@ -513,3 +517,50 @@ class CodeGenerator:
         self.current_identation -= 2
 
         self.output.append(" " * self.current_identation + f"{end_label}:")
+
+    def _visit_functiondeclaration(self, node):
+        """Lida com a declaração de função."""
+        print("[DEBUG] Visiting function declaration")
+        function_name = str(node.children[0].children[0]).strip()
+        self.output_functions.append(f"{function_name}:")
+        self.current_identation += 2
+        self.output_functions.append(" " * self.current_identation + "// Function body")
+        self.function_params[function_name] = len(node.children[1].children) if len(node.children) > 1 else 0
+        self.function_map[function_name] = (node.children[2].children[0]).strip().lower() if len(node.children) > 2 else "void"
+        self._visit_children(node.children[3])
+        print(f"[BEBUG] Current identation: {self.current_identation}")
+        print(f"[OUTPUT] {self.output}]")
+        print(f"[OUTPUT FUNCTIONS] {self.output_functions}]")
+
+        indent_str = " " * self.current_identation
+        new_output = []
+        lines_to_move = []
+
+        i = 0
+        while i < len(self.output):
+            line = self.output[i]
+
+            if line.startswith(indent_str):
+                # Começa a recolher grupo de linhas (com indentação e linhas em branco ao redor)
+                # Verifica se tem linhas em branco antes
+                if i > 0 and self.output[i-1].strip() == '':
+                    lines_to_move.append(self.output[i-1])
+                    new_output = new_output[:-1]  # Remove a linha em branco que já foi adicionada
+
+                # Recolhe as linhas com indentação e as linhas em branco seguintes
+                while i < len(self.output) and (self.output[i].startswith(indent_str) or self.output[i].strip() == ''):
+                    lines_to_move.append(self.output[i])
+                    i += 1
+                # Não incrementa i aqui pois já foi incrementado no while interno
+                continue
+            else:
+                new_output.append(line)
+                i += 1
+
+        self.output = new_output
+        self.output_functions.extend(lines_to_move)
+
+        self.output_functions.append(" " * self.current_identation + "// End of function body")
+        self.output_functions.append(" " * self.current_identation + "RETURN")
+        self.current_identation -= 2
+        self.output_functions.append("")
