@@ -48,7 +48,8 @@ def test_program_with_parameters():
 def test_variable_declaration():
     code = """
     program P;
-    var x, y: integer;
+    var
+        x, y: integer;
     begin
     end.
     """
@@ -80,7 +81,8 @@ def test_variable_declaration():
 def test_assignment_statement():
     code = """
     program Teste;
-    var x: integer;
+    var
+        x: integer;
     begin
         x := 5;
     end.
@@ -149,293 +151,590 @@ def test_assignment_statement():
 def test_if_else_statement():
     code = """
     program Teste;
+    var
+        x: integer;
     begin
         if 5 < 10 then x := 1 else x := 0
     end.
     """
     result = parser.parse(code)
-    expected = ASTNode('Program', [
-        ASTNode('Header', [
-            ASTNode('Identifier', [
-                ASTNode('Teste', [])
-            ])
-        ]),
-        ASTNode('Content', [
-            None,
-            ASTNode('CompoundStatement', [
-                ASTNode('ListStatement', [
-                    None,
-                    ASTNode('LastStatement', [
-                        ASTNode('Statement', [
-                            ASTNode('StructeredStatement', [
-                                ASTNode('ConditionalStatement', [
-                                    ASTNode('IfStatement', [
-                                        ASTNode('Expression', [
-                                            ASTNode('SimpleExpression', [
-                                                ASTNode('Term', [
-                                                    ASTNode('Factor', [
-                                                        ASTNode('UnsignedConstant', [
-                                                            ASTNode('Num_Int', ['5'])
-                                                        ])
-                                                    ])
-                                                ])
-                                            ]),
-                                            ASTNode('Operator', [
-                                                ASTNode('RelationalOperator', ['<'])
-                                            ]),
-                                            ASTNode('Expression', [
-                                                ASTNode('SimpleExpression', [
-                                                    ASTNode('Term', [
-                                                        ASTNode('Factor', [
-                                                            ASTNode('UnsignedConstant', [
-                                                                ASTNode('Num_Int', ['10'])
-                                                            ])
-                                                        ])
-                                                    ])
-                                                ])
-                                            ])
-                                        ]),
-                                        ASTNode('Statement', [
-                                            ASTNode('SimpleStatement', [
-                                                ASTNode('Assignment', [
-                                                    ASTNode('Variable', [
-                                                        ASTNode('Identifier', ['x'])
-                                                    ]),
-                                                    ASTNode('Expression', [
-                                                        ASTNode('SimpleExpression', [
-                                                            ASTNode('Term', [
-                                                                ASTNode('Factor', [
-                                                                    ASTNode('UnsignedConstant', [
-                                                                        ASTNode('Num_Int', ['1'])
-                                                                    ])
-                                                                ])
-                                                            ])
-                                                        ])
-                                                    ])
-                                                ])
-                                            ])
-                                        ]),
-                                        ASTNode('Statement', [
-                                            ASTNode('SimpleStatement', [
-                                                ASTNode('Assignment', [
-                                                    ASTNode('Variable', [
-                                                        ASTNode('Identifier', ['x'])
-                                                    ]),
-                                                    ASTNode('Expression', [
-                                                        ASTNode('SimpleExpression', [
-                                                            ASTNode('Term', [
-                                                                ASTNode('Factor', [
-                                                                    ASTNode('UnsignedConstant', [
-                                                                        ASTNode('Num_Int', ['0'])
-                                                                    ])
-                                                                ])
-                                                            ])
-                                                        ])
-                                                    ])
-                                                ])
-                                            ])
-                                        ])
-                                    ])
-                                ])
-                            ])
-                        ])
-                    ])
-                ])
-            ])
-        ])
-    ])
-
+    expected = ASTNode(
+        'Program', [
+            ASTNode(
+                'Header', [
+                    ASTNode(
+                        'Identifier', [
+                            ASTNode('Teste', [])
+                        ]
+                    )
+                ]
+            ),
+            ASTNode(
+                'Content', [
+                    ASTNode(
+                        'Declarations', [
+                            None,
+                            ASTNode(
+                                'VarDeclaration', [
+                                    ASTNode(
+                                        'ListVarDeclaration', [
+                                            ASTNode(
+                                                'VarElemDeclaration', [
+                                                    ASTNode(
+                                                        'IdentifierList', [
+                                                            ASTNode('Identifier', [ASTNode('x', [])])
+                                                        ]
+                                                    ),
+                                                    ASTNode('Type', [ASTNode('integer', [])])
+                                                ]
+                                            )
+                                        ]
+                                    )
+                                ]
+                            )
+                        ]
+                    ),
+                    ASTNode(
+                        'CompoundStatement', [
+                            ASTNode(
+                                'ListStatement', [
+                                    None,
+                                    ASTNode(
+                                        'LastStatement', [
+                                            ASTNode(
+                                                'Statement', [
+                                                    ASTNode(
+                                                        'StructeredStatement', [
+                                                            ASTNode(
+                                                                'ConditionalStatement', [
+                                                                    ASTNode(
+                                                                        'IfStatement', [
+                                                                            ASTNode(
+                                                                                'Expression', [
+                                                                                    ASTNode(
+                                                                                        'SimpleExpression', [
+                                                                                            ASTNode(
+                                                                                                'Term', [
+                                                                                                    ASTNode(
+                                                                                                        'Factor', [
+                                                                                                            ASTNode(
+                                                                                                                'UnsignedConstant', [
+                                                                                                                    ASTNode('Num_Int', ['5'])
+                                                                                                                ]
+                                                                                                            )
+                                                                                                        ]
+                                                                                                    )
+                                                                                                ]
+                                                                                            )
+                                                                                        ]
+                                                                                    ),
+                                                                                    ASTNode(
+                                                                                        'Operator', [
+                                                                                            ASTNode('RelationalOperator', ['<'])
+                                                                                        ]
+                                                                                    ),
+                                                                                    ASTNode(
+                                                                                        'Expression', [
+                                                                                            ASTNode(
+                                                                                                'SimpleExpression', [
+                                                                                                    ASTNode(
+                                                                                                        'Term', [
+                                                                                                            ASTNode(
+                                                                                                                'Factor', [
+                                                                                                                    ASTNode(
+                                                                                                                        'UnsignedConstant', [
+                                                                                                                            ASTNode('Num_Int', ['10'])
+                                                                                                                        ]
+                                                                                                                    )
+                                                                                                                ]
+                                                                                                            )
+                                                                                                        ]
+                                                                                                    )
+                                                                                                ]
+                                                                                            )
+                                                                                        ]
+                                                                                    )
+                                                                                ]
+                                                                            ),
+                                                                            ASTNode(
+                                                                                'Statement', [
+                                                                                    ASTNode(
+                                                                                        'SimpleStatement', [
+                                                                                            ASTNode(
+                                                                                                'Assignment', [
+                                                                                                    ASTNode(
+                                                                                                        'Variable', [
+                                                                                                            ASTNode('Identifier', ['x'])
+                                                                                                        ]
+                                                                                                    ),
+                                                                                                    ASTNode(
+                                                                                                        'Expression', [
+                                                                                                            ASTNode(
+                                                                                                                'SimpleExpression', [
+                                                                                                                    ASTNode(
+                                                                                                                        'Term', [
+                                                                                                                            ASTNode(
+                                                                                                                                'Factor', [
+                                                                                                                                    ASTNode(
+                                                                                                                                        'UnsignedConstant', [
+                                                                                                                                            ASTNode('Num_Int', ['1'])
+                                                                                                                                        ]
+                                                                                                                                    )
+                                                                                                                                ]
+                                                                                                                            )
+                                                                                                                        ]
+                                                                                                                    )
+                                                                                                                ]
+                                                                                                            )
+                                                                                                        ]
+                                                                                                    )
+                                                                                                ]
+                                                                                            )
+                                                                                        ]
+                                                                                    )
+                                                                                ]
+                                                                            ),
+                                                                            ASTNode(
+                                                                                'Statement', [
+                                                                                    ASTNode(
+                                                                                        'SimpleStatement', [
+                                                                                            ASTNode(
+                                                                                                'Assignment', [
+                                                                                                    ASTNode(
+                                                                                                        'Variable', [
+                                                                                                            ASTNode('Identifier', ['x'])
+                                                                                                        ]
+                                                                                                    ),
+                                                                                                    ASTNode(
+                                                                                                        'Expression', [
+                                                                                                            ASTNode(
+                                                                                                                'SimpleExpression', [
+                                                                                                                    ASTNode(
+                                                                                                                        'Term', [
+                                                                                                                            ASTNode(
+                                                                                                                                'Factor', [
+                                                                                                                                    ASTNode(
+                                                                                                                                        'UnsignedConstant', [
+                                                                                                                                            ASTNode('Num_Int', ['0'])
+                                                                                                                                        ]
+                                                                                                                                    )
+                                                                                                                                ]
+                                                                                                                            )
+                                                                                                                        ]
+                                                                                                                    )
+                                                                                                                ]
+                                                                                                            )
+                                                                                                        ]
+                                                                                                    )
+                                                                                                ]
+                                                                                            )
+                                                                                        ]
+                                                                                    )
+                                                                                ]
+                                                                            )
+                                                                        ]
+                                                                    )
+                                                                ]
+                                                            )
+                                                        ]
+                                                    )
+                                                ]
+                                            )
+                                        ]
+                                    )
+                                ]
+                            )
+                        ]
+                    )
+                ]
+            )
+        ]
+    )
+    print("Result AST:")
+    print(result.to_string())
+    print("\nExpected AST:")
+    print(expected.to_string())
+    print(expected==result)
     assert result == expected
 
 
 def test_while_statement():
     code = """
     program LoopTest;
+    var
+        i, x: integer;
     begin
         while x < 10 do x := x + 1
     end.
     """
     result = parser.parse(code)
-    expected = ASTNode('Program', [
-        ASTNode('Header', [
-            ASTNode('Identifier', [
-                ASTNode('LoopTest', [])
-            ])
-        ]),
-        ASTNode('Content', [
-            None,
-            ASTNode('CompoundStatement', [
-                ASTNode('ListStatement', [
-                    None,
-                    ASTNode('LastStatement', [
-                        ASTNode('Statement', [
-                            ASTNode('StructeredStatement', [
-                                ASTNode('RepetitiveStatement', [
-                                    ASTNode('WhileStatement', [
-                                        ASTNode('Expression', [
-                                            ASTNode('SimpleExpression', [
-                                                ASTNode('Term', [
-                                                    ASTNode('Factor', [
-                                                        ASTNode('Variable', [
-                                                            ASTNode('Identifier', ['x'])
-                                                        ])
-                                                    ])
-                                                ])
-                                            ]),
-                                            ASTNode('Operator', [
-                                                ASTNode('RelationalOperator', ['<'])
-                                            ]),
-                                            ASTNode('Expression', [
-                                                ASTNode('SimpleExpression', [
-                                                    ASTNode('Term', [
-                                                        ASTNode('Factor', [
-                                                            ASTNode('UnsignedConstant', [
-                                                                ASTNode('Num_Int', ['10'])
-                                                            ])
-                                                        ])
-                                                    ])
-                                                ])
-                                            ])
-                                        ]),
-                                        'Do',
-                                        ASTNode('Statement', [
-                                            ASTNode('SimpleStatement', [
-                                                ASTNode('Assignment', [
-                                                    ASTNode('Variable', [
-                                                        ASTNode('Identifier', ['x'])
-                                                    ]),
-                                                    ASTNode('Expression', [
-                                                        ASTNode('SimpleExpression', [
-                                                            ASTNode('Term', [
-                                                                ASTNode('Factor', [
-                                                                    ASTNode('Variable', [
-                                                                        ASTNode('Identifier', ['x'])
-                                                                    ])
-                                                                ])
-                                                            ]),
-                                                            ASTNode('Operator', [
-                                                                ASTNode('SecondPriorityOperator', ['+'])
-                                                            ]),
-                                                            ASTNode('SimpleExpression', [
-                                                                ASTNode('Term', [
-                                                                    ASTNode('Factor', [
-                                                                        ASTNode('UnsignedConstant', [
-                                                                            ASTNode('Num_Int', ['1'])
-                                                                        ])
-                                                                    ])
-                                                                ])
-                                                            ])
-                                                        ])
-                                                    ])
-                                                ])
-                                            ])
-                                        ])
-                                    ])
-                                ])
-                            ])
-                        ])
-                    ])
-                ])
-            ])
-        ])
-    ])
-
+    expected = ASTNode(
+        'Program', [
+            ASTNode(
+                'Header', [
+                    ASTNode(
+                        'Identifier', [
+                            ASTNode('LoopTest', [])
+                        ]
+                    )
+                ]
+            ),
+            ASTNode(
+                'Content', [
+                    ASTNode(
+                        'Declarations', [
+                            None,
+                            ASTNode(
+                                'VarDeclaration', [
+                                    ASTNode(
+                                        'ListVarDeclaration', [
+                                            ASTNode(
+                                                'VarElemDeclaration', [
+                                                    ASTNode(
+                                                        'IdentifierList', [
+                                                            ASTNode('Identifier', [ASTNode('i', [])]),
+                                                            ASTNode('Identifier', [ASTNode('x', [])])
+                                                        ]
+                                                    ),
+                                                    ASTNode('Type', [ASTNode('integer', [])])
+                                                ]
+                                            )
+                                        ]
+                                    )
+                                ]
+                            )
+                        ]
+                    ),
+                    ASTNode(
+                        'CompoundStatement', [
+                            ASTNode(
+                                'ListStatement', [
+                                    None,
+                                    ASTNode(
+                                        'LastStatement', [
+                                            ASTNode(
+                                                'Statement', [
+                                                    ASTNode(
+                                                        'StructeredStatement', [
+                                                            ASTNode(
+                                                                'RepetitiveStatement', [
+                                                                    ASTNode(
+                                                                        'WhileStatement', [
+                                                                            ASTNode(
+                                                                                'Expression', [
+                                                                                    ASTNode(
+                                                                                        'SimpleExpression', [
+                                                                                            ASTNode(
+                                                                                                'Term', [
+                                                                                                    ASTNode(
+                                                                                                        'Factor', [
+                                                                                                            ASTNode(
+                                                                                                                'Variable', [
+                                                                                                                    ASTNode('Identifier', ['x'])
+                                                                                                                ]
+                                                                                                            )
+                                                                                                        ]
+                                                                                                    )
+                                                                                                ]
+                                                                                            )
+                                                                                        ]
+                                                                                    ),
+                                                                                    ASTNode(
+                                                                                        'Operator', [
+                                                                                            ASTNode('RelationalOperator', ['<'])
+                                                                                        ]
+                                                                                    ),
+                                                                                    ASTNode(
+                                                                                        'Expression', [
+                                                                                            ASTNode(
+                                                                                                'SimpleExpression', [
+                                                                                                    ASTNode(
+                                                                                                        'Term', [
+                                                                                                            ASTNode(
+                                                                                                                'Factor', [
+                                                                                                                    ASTNode(
+                                                                                                                        'UnsignedConstant', [
+                                                                                                                            ASTNode('Num_Int', ['10'])
+                                                                                                                        ]
+                                                                                                                    )
+                                                                                                                ]
+                                                                                                            )
+                                                                                                        ]
+                                                                                                    )
+                                                                                                ]
+                                                                                            )
+                                                                                        ]
+                                                                                    )
+                                                                                ]
+                                                                            ),
+                                                                            'Do',
+                                                                            ASTNode(
+                                                                                'Statement', [
+                                                                                    ASTNode(
+                                                                                        'SimpleStatement', [
+                                                                                            ASTNode(
+                                                                                                'Assignment', [
+                                                                                                    ASTNode(
+                                                                                                        'Variable', [
+                                                                                                            ASTNode('Identifier', ['x'])
+                                                                                                        ]
+                                                                                                    ),
+                                                                                                    ASTNode(
+                                                                                                        'Expression', [
+                                                                                                            ASTNode(
+                                                                                                                'SimpleExpression', [
+                                                                                                                    ASTNode(
+                                                                                                                        'Term', [
+                                                                                                                            ASTNode(
+                                                                                                                                'Factor', [
+                                                                                                                                    ASTNode(
+                                                                                                                                        'Variable', [
+                                                                                                                                            ASTNode('Identifier', ['x'])
+                                                                                                                                        ]
+                                                                                                                                    )
+                                                                                                                                ]
+                                                                                                                            )
+                                                                                                                        ]
+                                                                                                                    ),
+                                                                                                                    ASTNode(
+                                                                                                                        'Operator', [
+                                                                                                                            ASTNode('SecondPriorityOperator', ['+'])
+                                                                                                                        ]
+                                                                                                                    ),
+                                                                                                                    ASTNode(
+                                                                                                                        'SimpleExpression', [
+                                                                                                                            ASTNode(
+                                                                                                                                'Term', [
+                                                                                                                                    ASTNode(
+                                                                                                                                        'Factor', [
+                                                                                                                                            ASTNode(
+                                                                                                                                                'UnsignedConstant', [
+                                                                                                                                                    ASTNode('Num_Int', ['1'])
+                                                                                                                                                ]
+                                                                                                                                            )
+                                                                                                                                        ]
+                                                                                                                                    )
+                                                                                                                                ]
+                                                                                                                            )
+                                                                                                                        ]
+                                                                                                                    )
+                                                                                                                ]
+                                                                                                            )
+                                                                                                        ]
+                                                                                                    )
+                                                                                                ]
+                                                                                            )
+                                                                                        ]
+                                                                                    )
+                                                                                ]
+                                                                            )
+                                                                        ]
+                                                                    )
+                                                                ]
+                                                            )
+                                                        ]
+                                                    )
+                                                ]
+                                            )
+                                        ]
+                                    )
+                                ]
+                            )
+                        ]
+                    )
+                ]
+            )
+        ]
+    )
     assert result == expected
 
 
 def test_for_loop():
     code = """
-    program LoopFor;
-    begin
-        for i := 1 to 10 do x := x + i
-    end.
+        program LoopFor;
+        var
+            i, x: integer;
+        begin
+            for i := 1 to 10 do x := x + i
+        end.
     """
     result = parser.parse(code)
-    expected = ASTNode('Program', [
-        ASTNode('Header', [
-            ASTNode('Identifier', [
-                ASTNode('LoopFor', [])
-            ])
-        ]),
-        ASTNode('Content', [
-            None,
-            ASTNode('CompoundStatement', [
-                ASTNode('ListStatement', [
-                    None,
-                    ASTNode('LastStatement', [
-                        ASTNode('Statement', [
-                            ASTNode('StructeredStatement', [
-                                ASTNode('RepetitiveStatement', [
-                                    ASTNode('ForStatement', [
-                                        ASTNode('Identifier', [
-                                            ASTNode('i', [])
-                                        ]),
-                                        'Assign',
-                                        ASTNode('Expression', [
-                                            ASTNode('SimpleExpression', [
-                                                ASTNode('Term', [
-                                                    ASTNode('Factor', [
-                                                        ASTNode('UnsignedConstant', [
-                                                            ASTNode('Num_Int', ['1'])
-                                                        ])
-                                                    ])
-                                                ])
-                                            ])
-                                        ]),
-                                        'To',
-                                        ASTNode('Expression', [
-                                            ASTNode('SimpleExpression', [
-                                                ASTNode('Term', [
-                                                    ASTNode('Factor', [
-                                                        ASTNode('UnsignedConstant', [
-                                                            ASTNode('Num_Int', ['10'])
-                                                        ])
-                                                    ])
-                                                ])
-                                            ])
-                                        ]),
-                                        'Do',
-                                        ASTNode('Statement', [
-                                            ASTNode('SimpleStatement', [
-                                                ASTNode('Assignment', [
-                                                    ASTNode('Variable', [
-                                                        ASTNode('Identifier', ['x'])
-                                                    ]),
-                                                    ASTNode('Expression', [
-                                                        ASTNode('SimpleExpression', [
-                                                            ASTNode('Term', [
-                                                                ASTNode('Factor', [
-                                                                    ASTNode('Variable', [
-                                                                        ASTNode('Identifier', ['x'])
-                                                                    ])
-                                                                ])
-                                                            ]),
-                                                            ASTNode('Operator', [
-                                                                ASTNode('SecondPriorityOperator', ['+'])
-                                                            ]),
-                                                            ASTNode('SimpleExpression', [
-                                                                ASTNode('Term', [
-                                                                    ASTNode('Factor', [
-                                                                        ASTNode('Variable', [
-                                                                            ASTNode('Identifier', ['i'])
-                                                                        ])
-                                                                    ])
-                                                                ])
-                                                            ])
-                                                        ])
-                                                    ])
-                                                ])
-                                            ])
-                                        ])
-                                    ])
-                                ])
-                            ])
-                        ])
-                    ])
-                ])
-            ])
-        ])
-    ])
+    expected = ASTNode(
+        'Program', [
+            ASTNode(
+                'Header', [
+                    ASTNode(
+                        'Identifier', [
+                            ASTNode('LoopFor', [])
+                        ]
+                    )
+                ]
+            ),
+            ASTNode(
+                'Content', [
+                    ASTNode(
+                        'Declarations', [
+                            None,
+                            ASTNode(
+                                'VarDeclaration', [
+                                    ASTNode(
+                                        'ListVarDeclaration', [
+                                            ASTNode(
+                                                'VarElemDeclaration', [
+                                                    ASTNode(
+                                                        'IdentifierList', [
+                                                            ASTNode('Identifier', [ASTNode('i', [])]),
+                                                            ASTNode('Identifier', [ASTNode('x', [])])
+                                                        ]
+                                                    ),
+                                                    ASTNode('Type', [ASTNode('integer', [])])
+                                                ]
+                                            )
+                                        ]
+                                    )
+                                ]
+                            )
+                        ]
+                    ),
+                    ASTNode(
+                        'CompoundStatement', [
+                            ASTNode(
+                                'ListStatement', [
+                                    None,
+                                    ASTNode(
+                                        'LastStatement', [
+                                            ASTNode(
+                                                'Statement', [
+                                                    ASTNode(
+                                                        'StructeredStatement', [
+                                                            ASTNode(
+                                                                'RepetitiveStatement', [
+                                                                    ASTNode(
+                                                                        'ForStatement', [
+                                                                            ASTNode('Identifier', [ASTNode('i', [])]),
+                                                                            'Assign',
+                                                                            ASTNode(
+                                                                                'Expression', [
+                                                                                    ASTNode(
+                                                                                        'SimpleExpression', [
+                                                                                            ASTNode(
+                                                                                                'Term', [
+                                                                                                    ASTNode(
+                                                                                                        'Factor', [
+                                                                                                            ASTNode(
+                                                                                                                'UnsignedConstant', [
+                                                                                                                    ASTNode('Num_Int', ['1'])
+                                                                                                                ]
+                                                                                                            )
+                                                                                                        ]
+                                                                                                    )
+                                                                                                ]
+                                                                                            )
+                                                                                        ]
+                                                                                    )
+                                                                                ]
+                                                                            ),
+                                                                            'To',
+                                                                            ASTNode(
+                                                                                'Expression', [
+                                                                                    ASTNode(
+                                                                                        'SimpleExpression', [
+                                                                                            ASTNode(
+                                                                                                'Term', [
+                                                                                                    ASTNode(
+                                                                                                        'Factor', [
+                                                                                                            ASTNode(
+                                                                                                                'UnsignedConstant', [
+                                                                                                                    ASTNode('Num_Int', ['10'])
+                                                                                                                ]
+                                                                                                            )
+                                                                                                        ]
+                                                                                                    )
+                                                                                                ]
+                                                                                            )
+                                                                                        ]
+                                                                                    )
+                                                                                ]
+                                                                            ),
+                                                                            'Do',
+                                                                            ASTNode(
+                                                                                'Statement', [
+                                                                                    ASTNode(
+                                                                                        'SimpleStatement', [
+                                                                                            ASTNode(
+                                                                                                'Assignment', [
+                                                                                                    ASTNode(
+                                                                                                        'Variable', [
+                                                                                                            ASTNode('Identifier', ['x'])
+                                                                                                        ]
+                                                                                                    ),
+                                                                                                    ASTNode(
+                                                                                                        'Expression', [
+                                                                                                            ASTNode(
+                                                                                                                'SimpleExpression', [
+                                                                                                                    ASTNode(
+                                                                                                                        'Term', [
+                                                                                                                            ASTNode(
+                                                                                                                                'Factor', [
+                                                                                                                                    ASTNode(
+                                                                                                                                        'Variable', [
+                                                                                                                                            ASTNode('Identifier', ['x'])
+                                                                                                                                        ]
+                                                                                                                                    )
+                                                                                                                                ]
+                                                                                                                            )
+                                                                                                                        ]
+                                                                                                                    ),
+                                                                                                                    ASTNode(
+                                                                                                                        'Operator', [
+                                                                                                                            ASTNode('SecondPriorityOperator', ['+'])
+                                                                                                                        ]
+                                                                                                                    ),
+                                                                                                                    ASTNode(
+                                                                                                                        'SimpleExpression', [
+                                                                                                                            ASTNode(
+                                                                                                                                'Term', [
+                                                                                                                                    ASTNode(
+                                                                                                                                        'Factor', [
+                                                                                                                                            ASTNode(
+                                                                                                                                                'Variable', [
+                                                                                                                                                    ASTNode('Identifier', ['i'])
+                                                                                                                                                ]
+                                                                                                                                            )
+                                                                                                                                        ]
+                                                                                                                                    )
+                                                                                                                                ]
+                                                                                                                            )
+                                                                                                                        ]
+                                                                                                                    )
+                                                                                                                ]
+                                                                                                            )
+                                                                                                        ]
+                                                                                                    )
+                                                                                                ]
+                                                                                            )
+                                                                                        ]
+                                                                                    )
+                                                                                ]
+                                                                            )
+                                                                        ]
+                                                                    )
+                                                                ]
+                                                            )
+                                                        ]
+                                                    )
+                                                ]
+                                            )
+                                        ]
+                                    )
+                                ]
+                            )
+                        ]
+                    )
+                ]
+            )
+        ]
+    )
     assert result == expected
 
 

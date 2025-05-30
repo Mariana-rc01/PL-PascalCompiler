@@ -103,6 +103,8 @@ def test_assignment_statement():
 def test_if_else_statement():
     code = """
         program Teste;
+        var
+            x: integer;
         begin
             if 5 < 10 then x := 1 else x := 0
         end.
@@ -111,6 +113,11 @@ def test_if_else_statement():
     expected = [
         ('PROGRAM', 'program'),
         ('identifier', 'Teste'),
+        (';', ';'),
+        ('VAR', 'var'),
+        ('identifier', 'x'),
+        ('COLON', ':'),
+        ('identifier', 'integer'),
         (';', ';'),
         ('BEGIN', 'begin'),
         ('IF', 'if'),
@@ -133,6 +140,8 @@ def test_if_else_statement():
 def test_while_statement():
     code = """
         program LoopTest;
+        var
+            x: integer;
         begin
             while x < 10 do x := x + 1
         end.
@@ -141,6 +150,11 @@ def test_while_statement():
     expected = [
         ('PROGRAM', 'program'),
         ('identifier', 'LoopTest'),
+        (';', ';'),
+        ('VAR', 'var'),
+        ('identifier', 'x'),
+        ('COLON', ':'),
+        ('identifier', 'integer'),
         (';', ';'),
         ('BEGIN', 'begin'),
         ('WHILE', 'while'),
@@ -161,6 +175,8 @@ def test_while_statement():
 def test_for_loop():
     code = """
         program LoopFor;
+        var
+            i, x: integer;
         begin
             for i := 1 to 10 do x := x + i
         end.
@@ -169,6 +185,13 @@ def test_for_loop():
     expected = [
         ('PROGRAM', 'program'),
         ('identifier', 'LoopFor'),
+        (';', ';'),
+        ('VAR', 'var'),
+        ('identifier', 'i'),
+        (',', ','),
+        ('identifier', 'x'),
+        ('COLON', ':'),
+        ('identifier', 'integer'),
         (';', ';'),
         ('BEGIN', 'begin'),
         ('FOR', 'for'),
