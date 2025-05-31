@@ -412,6 +412,73 @@ A especificação da gramática foi concebida com o intuito de suportar a geraç
 
 ## Análise Semântica
 
+A **análise semântica** constitui uma etapa essencial no processo de fazer um compilador, esta é
+responsável por validar a **correção lógica e contextual** de um programa após a análise sintática.
+Esta fase assegura que o código respeita as regras de semântica de Pascal, como
+coerência de tipos, existência e escopo de identificadores, chamadas a funções com parâmetros adequados,
+entre outros.
+
+A implementação analisada efetua a travessia da **árvore sintática abstrata (AST)**, percorrendo os
+seus nodos de forma recursiva e executando verificações semânticas apropriadas a cada tipo de construção.
+Durante esta travessia, é mantida uma **tabela de símbolos com suporte a escopos aninhados**, crucial
+para a correta gestão de identificadores e respetivos atributos.
+
+### Estrutura e Mecanismos Fundamentais
+
+* **Gestão de Escopos**:
+  * Utiliza-se uma estrutura em _stack_ (lista de dicionários) para representar os escopos.
+  * Cada entrada na _stack_ corresponde a um novo nível de escopo (p.e., blocos de funções e procedimentos).
+  * Esta abordagem permite suportar regras de visibilidade e evitar conflitos de nomes.
+
+* **Despacho Dinâmico por Tipo de Nodo**:
+  * O método `_visit` atua como ponto central da travessia da árvore.
+  * Determina dinamicamente qual é o método específico a invocar com base no tipo do nodo.
+  * Quando não existe um método específico, é feita uma travessia genérica pelos filhos do nodo.
+
+* **Validação de Declarações**:
+  * Verifica-se a duplicação de identificadores no mesmo escopo.
+  * O registo de funções e procedimentos inclui parâmetros e tipo de retorno (em funções).
+  * Os parâmetros são automaticamente introduzidos no escopo local como variáveis.
+
+### Verificações Semânticas Específicas
+
+* **Declaração e Uso de Variáveis**:
+  * Suporte a variáveis simples e arrays.
+  * Os arrays são validados quanto ao tipo base e limites (inferior e superior), incluindo avaliação de
+  expressões constantes.
+  * Os arrays de caracteres são tratados como strings, simplificando comparações de tipo.
+
+* **Atribuições**:
+  * Verificação de compatibilidade entre o tipo da variável e o tipo da expressão.
+  * Compatibilidades implícitas são permitidas (p.e., inteiro para real), mas incompatibilidades explícitas são
+  reportadas como erro.
+
+* **Chamadas a Funções e Procedimentos**:
+  * Verificação de existência e do tipo do identificador chamado.
+  * Comparação do número e do tipo dos argumentos passados com os parâmetros esperados.
+  * Tratamento especial para funções/procedimentos embutidos (p.e., `write`, `writeln`, `readln`, `write`),
+  incluindo regras específicas:
+    * `readln` só aceita variáveis como argumentos.
+    * `writeln` aceita múltiplos argumentos de tipos diversos, mas todos devem ser reconhecidos.
+
+* **Instruções de Controlo**:
+  * `if` e `while`: a condição deve ser do tipo booleano.
+  * `for`: a variável de controlo deve estar previamente declarada e ser do tipo inteiro. Limites devem
+  ser compatíveis com expressões inteiras.
+
+* **Resolução de Tipos em Expressões**:
+  * O método `_get_expression_type` determina o tipo de expressões aritméticas, relacionais e lógicas.
+  * Valida o uso correto de operadores:
+    * Operadores aritméticos: `+`, `-`, `*`, `/`, `div`, `mod` requerem operandos numéricos.
+    * Operadores lógicos: `and`, `or`, `not` exigem operandos booleanos.
+    * Operadores relacionais verificam compatibilidade entre operandos e resultam num tipo booleano.
+
+* **Avaliação de Constantes**:
+  * Expressões constantes são avaliadas para permitir validações estáticas (p.e., limites de arrays, literais em `for`).
+
+A análise semântica implementada revela-se **modular, extensível e robusta**, cobrindo os aspetos
+essenciais de uma linguagem imperativa com tipagem estática como Pascal.
+
 ## Geração de Código
 
 ## Testes
