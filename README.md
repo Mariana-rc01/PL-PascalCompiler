@@ -496,6 +496,42 @@ essenciais de uma linguagem imperativa com tipagem estática como Pascal.
 
 ## Geração de Código
 
+A geração de código constitui a fase final do processo de compilação, onde a **árvore sintática abstrata (AST)**, validada semanticamente, é convertida em código de máquina executável. Este processo envolve a aplicação de um **visit pattern**, que permite percorrer recursivamente a AST, gerando as instruções de máquina correspondentes a cada nó da árvore.
+
+### Visit Pattern
+
+A implementação da geração de código baseia-se num padrão de projeto conhecido como **visit pattern**, que permite a separação da lógica de processamento da estrutura dos dados. Este padrão é aplicado através de um método `_visit` que, consoante o tipo de nó da AST, invoca métodos específicos para cada construção da linguagem. Estes métodos, como `_visit_program`, `_visit_ifstatement` ou `_visit_forstatement`, encapsulam a lógica de geração de código para cada tipo de construção, promovendo assim um código modular e extensível.
+
+### Estruturas Auxiliares
+
+Durante a geração de código, são utilizadas diversas estruturas auxiliares para manter o estado e facilitar a tradução. Conceptualmente, uma tabela de símbolos é mantida para mapear variáveis aos seus endereços de memória, sendo diferenciadas variáveis globais e locais (dentro de funções). Além disso, são geridos contadores para endereçamento de variáveis e funções, bem como mapas para armazenar os tipos de variáveis e limites de arrays.
+
+### Operações Aritméticas e Relacionais
+
+As operações aritméticas e relacionais são traduzidas para as instruções de máquina correspondentes, respeitando a **prioridade das operações**. Assim, operadores de primeira prioridade (como `*`, `/`, `div`, `mod`) são processados antes dos de segunda prioridade (`+`, `-`), e as operações relacionais (`=`, `<`, `>`, etc.) são avaliadas após as aritméticas. Para tal, o gerador de código utiliza uma abordagem recursiva, processando primeiro os operandos e, em seguida, aplicando o operador correspondente.
+
+### Variáveis
+
+As variáveis são geridas através da estrutura que as mapeia para endereços de memória. Durante a geração de código, são emitidas instruções para carregar (`PUSHG` para variáveis globais ou `PUSHL` para variáveis locais) e armazenar (`STOREG` ou `STOREL`) valores nas respetivas posições de memória. A inicialização de variáveis é efetuada no momento da sua declaração, garantindo que todas as variáveis têm um valor definido antes de serem utilizadas.
+
+### Arrays
+
+Os arrays são tratados de forma especial, sendo adaptados os índices para o limite inferior declarado. Para aceder a um elemento de um array, são geradas instruções para calcular o endereço correto, ajustando o índice fornecido pelo limite inferior e carregando o valor correspondente (`LOADN`). A declaração de arrays envolve a alocação de memória suficiente para armazenar todos os elementos, baseando-se no tipo base e nos limites superior e inferior.
+
+### Ciclos
+
+A implementação de ciclos, nomeadamente `for` e `while`, recorre a instruções de salto condicional (`JZ`, `JUMP`) e a rótulos para controlar o fluxo de execução. No caso do ciclo `for`, são geridas as instruções para inicializar a variável de controlo, verificar a condição de continuação e atualizar o valor da variável após cada iteração. Para o ciclo `while`, é verificada a condição no início de cada iteração e efetuado o salto condicional para o final do ciclo caso a condição não seja satisfeita.
+
+### Estruturas de Decisão
+
+As estruturas de decisão, como o `if-then-else`, são traduzidas utilizando instruções de salto condicional (`JZ` para saltar para o bloco `else` caso a condição seja falsa e `JUMP` para saltar para o final da estrutura após o bloco `then`). São gerados rótulos para marcar o início do bloco `else` e o final da estrutura de decisão, garantindo a correta execução do fluxo condicional.
+
+### Implementação de Funções
+
+As funções são geridas através de uma estrutura que mapeia o nome da função ao seu tipo de retorno. Durante a chamada a uma função, são geradas instruções para carregar os argumentos na *stack* e efetuar a chamada (`CALL`). No corpo da função, os parâmetros são tratados como variáveis locais e alcançadas a partir da posição negativa relativa ao *frame pointer*, sendo carregados a partir da *stack* e armazenados nas posições correspondentes. A função termina com uma instrução `RETURN`, que retorna o controlo para o ponto de chamada.
+
+O gerador de código produz assim um conjunto de instruções que, quando executadas, replicam o comportamento do programa Pascal original, convertendo-o numa representação executável que respeita as regras semânticas e sintáticas da linguagem alvo.
+
 ## Testes
 
 A implementação do compilador foi acompanhada de uma abordagem sistemática de testes automáticos,
