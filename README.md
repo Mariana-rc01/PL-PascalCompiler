@@ -530,7 +530,7 @@ O parser utiliza uma gramática LL baseada no `PLY` para construir a Árvore Sin
 
 **Objetivos dos testes sintáticos**:
 * Verificar que a estrutura da árvore sintática gerada corresponde à estrutura esperada da linguagem.
-* Confirmar que elementos opcionais (e.g., parâmetros, declarações) são corretamente representados com `None` ou nós específicos.
+* Confirmar que elementos opcionais (e.g., parâmetros, declarações) são corretamente representados com `None` ou nodos específicos.
 * Testar a robustez da parser face a diferentes níveis de complexidade do código.
 
 **Exemplo resumido de teste sintático**:
@@ -591,29 +591,105 @@ Os testes cobrem:
 
 ## Extras
 
+No âmbito deste projeto de desenvolver um compilador, para além das componentes essenciais de
+análise léxica, sintática e semântica, foram ainda desenvolvidas funcionalidades complementares
+que enriquecem o processo de interpretação do código fonte e o tornam mais acessível e eficiente.
+De modo que temos a:
+
+* A construção de uma **Árvore Sintática Abstrata (AST)**
+* A integração com uma **interface gráfica para visualização da AST**
+
+Estas extensões visam facilitar a **compreensão estrutural do programa analisado** e possibilitar
+**otimizações futuras**, bem como melhorar a **experiência do utilizador**, especialmente em
+contexto pedagógico ou de debugging.
+
 ### Árvore AST
+
+A **AST (Abstract Syntax Tree)** é uma representação hierárquica e simplificada da estrutura lógica do
+código fonte, gerada na fase de análise sintática. Ao contrário da árvore de derivação concreta (parse
+tree), a AST elimina elementos redundantes e foca-se apenas na **semântica essencial** do programa.
+
+A nossa implementação é baseada na classe `ASTNode`, cuja estrutura permite:
+
+* Definir o tipo de cada nó através do atributo `nodetype` (ex: `"Program"`, `"Assignment"`,
+`"IfStatement"`)
+* Associar filhos (`children`) que representam subcomponentes sintáticos
+* Atribuir valores terminais relevantes, como nomes de variáveis ou constantes
 
 ### Interface gráfica
 
+Como complemento à geração da Árvore Sintática Abstrata (AST), foi desenvolvida uma interface gráfica
+que permite **visualizar a estrutura da árvore de forma clara e interativa**. Esta funcionalidade é
+especialmente útil em contextos de debugging ou de análise estrutural do código
+e permite acompanhar facilmente a transformação do código-fonte numa representação hierárquica lógica.
+
+Foram implementadas **duas versões distintas** da interface gráfica:
+
+#### 1. Visualização Web com Flask e D3.js
+
+A versão web foi construída com a framework **Flask**, permite ao utilizador submeter código através
+de um formulário HTML. O código submetido é processado pelo analisador sintático, e a AST gerada é
+convertida para uma estrutura JSON que é depois interpretada e desenhada no navegador com recurso à
+biblioteca **D3.js**.
+
+O servidor Flask trata o input e converte a AST para um formato JSON com a função `build_tree_json`.
+O template HTML (`index.html`) utiliza D3.js para renderizar a árvore SVG. Os nós são representados por
+círculos e etiquetas, e as ligações são desenhadas entre cada nó pai e os seus filhos. A árvore é
+centralizada dinamicamente com base no espaço ocupado pelos seus elementos, permitindo melhor legibilidade.
+
+#### 2. Visualização Local com Tkinter
+
+A versão desktop da visualização da AST foi implementada com a biblioteca **Tkinter**, que faz parte da biblioteca padrão do Python. Esta abordagem permite ao utilizador **carregar representações textuais da AST (com indentação)** e visualizar a árvore diretamente numa janela local.
+
+O texto da AST é convertido de volta numa estrutura `ASTNode` com base na indentação, simulando o formato gerado pelo método `__str__`. A classe `TreeDrawer` calcula posições relativas para cada nó da árvore, garantindo espaçamento uniforme e posicionamento centrado.
+O desenho é feito num canvas interativo com barras de scroll, adaptando-se ao tamanho do ecrã.
+Cada nó é desenhado com o seu tipo e valor (caso exista), e as ligações são traçadas automaticamente entre os nós pais e filhos.
+
+Ambas as versões cumprem o objetivo de **facilitar a análise estrutural da AST**, permitindo ao utilizador compreender como o código é interpretado internamente pelo compilador.
+
 ## Manual de utilização
 
-### Parser
+Este manual explica como utilizar as diferentes componentes do projeto: o **parser**, as ferramentas de **visualização da AST** e o sistema de **testes automatizados**.
+
+### 1. Análise do Código Pascal
+
+Executa o parser sobre um ficheiro `.pas` e imprime no terminal se a análise léxica, sintática e semântica correu bem.
 
 ```bash
 python3 -m Compiler.parser < Tests/testN.pas
 ```
 
-### Tree_Drawer
+### 2. Visualização da AST com Interface Gráfica (Tkinter)
+
+Desenha a AST gerada, usando uma interface local com `Tkinter`.
 
 ```bash
 python3 -m Compiler.parser < Tests/testN.pas | python3 -m ASTree.tree_drawer
 ```
 
-### App
+### 3. Visualização Web da AST (Flask + D3.js)
+
+Inicia uma aplicação web onde é possível colar código Pascal e ver a AST renderizada no navegador.
 
 ```bash
 python3 -m ASTree.app
 ```
+
+Acede-se em `http://localhost:5000` no navegador.
+
+### 4. Execução de Testes Automáticos
+
+Corre todos os testes unitários definidos no diretório `Tests/`.
+
+```bash
+pytest -v Tests/
+```
+
+* **Antes de correr, é necessário confirmar que as dependências encontram-se todas instaladas:**
+
+  ```bash
+  pip install -r requirements.txt
+  ```
 
 ## Conclusões
 
