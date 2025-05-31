@@ -350,11 +350,6 @@ def test_if_else_statement():
             )
         ]
     )
-    print("Result AST:")
-    print(result.to_string())
-    print("\nExpected AST:")
-    print(expected.to_string())
-    print(expected==result)
     assert result == expected
 
 
