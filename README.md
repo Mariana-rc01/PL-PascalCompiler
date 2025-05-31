@@ -16,6 +16,11 @@ python3 -m Compiler.parser < Tests/testN.pas | python3 -m ASTree.tree_drawer
 
 ```bash
 python3 -m ASTree.app
-
-pytest -v Tests/
 ```
+
+## Tests
+
+```bash
+python3 -m pytest -v Tests/
+```
+
