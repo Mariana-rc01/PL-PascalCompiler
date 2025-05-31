@@ -483,6 +483,112 @@ essenciais de uma linguagem imperativa com tipagem estática como Pascal.
 
 ## Testes
 
+A implementação do compilador foi acompanhada de uma abordagem sistemática de testes automáticos,
+onde foram abrangidos os três componentes principais do processo de compilação:
+
+* Analisador Léxico (*Lexer*)
+* Analisador Sintático (*Parser*)
+* Analisador Semântico
+
+Os testes foram desenvolvidos com o objetivo principal de garantir correção, robustez e conformidade com a
+gramática de Pascal, cobrindo uma variedade de construções léxicas, sintáticas e semânticas.
+
+* Utilização da framework de testes `pytest`, integrado com o módulo `assert`, para verificar automaticamente os resultados.
+* Estrutura modular de testes, organizada por componente (`lex`, `parser`, `semantic`), com
+reutilização dos mesmos blocos de código para validação cruzada das fases.
+
+### Testes ao Analisador Léxico
+
+Os testes léxicos têm como objetivo validar a correta tokenização de código-fonte Pascal. São utilizados exemplos representativos com diversos elementos da linguagem.
+
+**Características testadas**:
+* Reconhecimento de palavras-chave (`program`, `begin`, `end`, `if`, `then`, `else`, `while`, `for`, etc.)
+* Identificadores, números inteiros, strings e símbolos especiais (`:=`, `;`, `:`, `+`, `-`, `*`, `(`, `)`, etc.)
+* Comentários em diferentes formatos (`{ ... }` e `(* ... *)`)
+* Suporte a estruturas de controlo e declarações complexas (ciclos, condições, funções, procedimentos)
+
+**Exemplo resumido de teste léxico**:
+```python
+def test_program_simple_header():
+    code = "program HelloWorld; begin end."
+    tokens = tokenize(code)
+    expected = [
+        ('PROGRAM', 'program'),
+        ('identifier', 'HelloWorld'),
+        (';', ';'),
+        ('BEGIN', 'begin'),
+        ('END', 'end'),
+        ('.', '.')
+    ]
+    assert tokens == expected
+```
+
+### Testes ao Analisador Sintático
+
+O parser utiliza uma gramática LL baseada no `PLY` para construir a Árvore Sintática Abstrata
+(**AST**) a partir dos tokens.
+
+**Objetivos dos testes sintáticos**:
+* Verificar que a estrutura da árvore sintática gerada corresponde à estrutura esperada da linguagem.
+* Confirmar que elementos opcionais (e.g., parâmetros, declarações) são corretamente representados com `None` ou nós específicos.
+* Testar a robustez da parser face a diferentes níveis de complexidade do código.
+
+**Exemplo resumido de teste sintático**:
+```python
+def test_program_simple_header():
+    code = "program HelloWorld; begin end."
+    result = parser.parse(code)
+    expected = ASTNode("Program", [
+        ASTNode("Header", [ASTNode("Identifier", [ASTNode("HelloWorld")])]),
+        ASTNode("Content", [
+            None,
+            ASTNode("CompoundStatement", [
+                ASTNode("ListStatement", [None, None])
+            ])
+        ])
+    ])
+    assert result == expected
+```
+
+Os testes sintáticos reutilizam os mesmos fragmentos de código que os testes léxicos, assegurando consistência entre fases.
+
+### Testes à Análise Semântica
+
+A fase de análise semântica introduz verificações adicionais sobre a coerência lógica e contextual do programa.
+
+**Objetivos principais**:
+* Garantir que variáveis, funções e procedimentos são declarados antes de serem utilizados.
+* Confirmar compatibilidade de tipos em atribuições, expressões e chamadas de função.
+* Validar estruturas de controlo como `for`, `if`, `while`, assegurando requisitos semânticos (e.g., condição booleana).
+
+**Estrutura dos testes semânticos**:
+* Cada teste invoca o parser para gerar a AST.
+* A AST é passada ao `SemanticAnalyzer`, que efetua a verificação.
+* A ausência de erros semânticos é verificada com:
+
+  ```python
+  assert analyzer.analyze(result) == []
+  assert analyzer.errors == []
+  ```
+
+**Exemplo simplificado**:
+```python
+def test_program_with_parameters():
+    code = "program HelloWorld(a, b, c); begin end."
+    analyzer = SemanticAnalyzer()
+    result = parser.parse(code)
+    assert analyzer.analyze(result) == []
+    assert analyzer.errors == []
+```
+
+Os testes cobrem:
+1. Declaração de variáveis simples e compostas
+2. Atribuições e expressões aritméticas/lógicas
+3. Estruturas de controlo (`if-then-else`, `while`, `for`)
+4. Subprogramas: `procedure` e `function`, com e sem parâmetros
+5. Interação com funções integradas (`readln`, `writeln`)
+6. Tratamento de comentários e literais
+
 ## Extras
 
 ### Árvore AST
