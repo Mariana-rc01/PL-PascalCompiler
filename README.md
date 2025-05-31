@@ -30,9 +30,24 @@
 
 ## Introdução
 
+Este relatório apresenta o desenvolvimento de um compilador para a linguagem Pascal. O objetivo principal é explorar os conceitos fundamentais de compiladores, como análise léxica, análise sintática, análise semântica e geração de código máquina. Esses conceitos são essenciais para compreender o funcionamento interno de linguagens de programação e sistemas de tradução de código.
+
+O projeto foi desenvolvido utilizando Python e ferramentas como **PLY (Python Lex-Yacc)**, que facilitaram a implementação das etapas de análise léxica e sintática. A especificação oficial da linguagem Pascal standard foi utilizada como referência para garantir que o compilador estivesse em conformidade com os padrões da linguagem.
+
 ## Descrição Geral do Projeto
 
+O compilador desenvolvido neste projeto foi estruturado em diferentes módulos, cada um responsável por uma etapa específica do processo de compilação. A análise léxica identifica os tokens da linguagem, enquanto a análise sintática constrói a árvore abstrata de sintaxe (AST) com base nas regras gramaticais. A análise semântica verifica a validade do código em termos de tipos e escopos, e a geração de código traduz o programa Pascal para uma representação executável.
+
+Além disso, o projeto inclui uma interface gráfica que permite visualizar a AST gerada, facilitando o entendimento do funcionamento interno do compilador. Um conjunto de testes automatizados foi desenvolvido para validar cada etapa do processo, garantindo a robustez e a confiabilidade do sistema.
+
 ## Objetivos
+
+Os principais objetivos deste projeto foram:
+
+1. **Explorar os conceitos fundamentais de compiladores**: Implementar as etapas de análise léxica, sintática, semântica e geração de código, compreendendo os desafios e soluções associados a cada uma delas.
+2. **Desenvolver um compilador funcional para Pascal**: Garantir que o compilador seja capaz de processar programas escritos em Pascal e gerar uma saída válida.
+3. **Criar uma interface gráfica**: Permitir a visualização da AST para auxiliar na depuração e na aprendizagem da estrutura interna do compilador.
+4. **Garantir a qualidade do sistema**: Implementar testes automatizados para validar o funcionamento correto de cada módulo do compilador.
 
 ## Análise Léxica
 
@@ -443,6 +458,12 @@ python3 -m ASTree.app
 ```
 
 ## Conclusões
+
+O desenvolvimento deste compilador para a linguagem Pascal permitiu uma exploração aprofundada dos conceitos fundamentais de processamento de linguagens, como análise léxica, análise sintática, análise semântica e geração de código. A utilização de ferramentas, como Python e PLY, facilitou a implementação e demonstrou eficácia.
+
+Além disso, a inclusão de uma interface gráfica para visualização da árvore abstrata de sintaxe (AST) e a criação de um conjunto de testes automatizados contribuíram para a robustez e usabilidade do projeto. Esses elementos não apenas garantiram a qualidade do sistema, mas também proporcionaram uma experiência prática enriquecedora no desenvolvimento de compiladores.
+
+Por fim, este projeto destacou os desafios inerentes ao processo de compilação e as soluções adotadas para superá-los, aprofundando o funcionamento interno de linguagens de programação.
 
 ## Referências
 
