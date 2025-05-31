@@ -1,6 +1,6 @@
 PROGraM HelloWorld;
 vaR
-    a : Double;
+    a : real;
 BEGin
     a := (((4*2) / (3 + 1))) - 4;
     writeln(a);
