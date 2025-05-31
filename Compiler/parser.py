@@ -469,16 +469,13 @@ if __name__ == '__main__':
     ast = parse_input(text)
     analyzer = SemanticAnalyzer()
     analyzer.analyze(ast)
-    print("AST:")
-    #print(ast)
-    print("=" * 20)
 
-    if analyzer.errors and 1 == -1:
+    if analyzer.errors:
         print("Semantic analysis errors:")
         for err in analyzer.errors:
             print("-", err)
     else:
         generator = CodeGenerator()
         code = generator.generate(ast)
-        print("Generated code:")
+        print("== Generated code ==")
         print(code)

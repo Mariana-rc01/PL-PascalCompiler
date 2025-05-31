@@ -3,19 +3,20 @@ from ASTree.astree import ASTNode
 class CodeGenerator:
     def __init__(self):
         self.output = []
-        self.var_counter = 0 # Perceber qual o endereço a utilizar para a próxima variável
-        self.var_map = {} # Mapear o sitio da memória para cada variável
-        self.var_type_map = {} # Mapear o tipo de cada variável
-        self.array_lower_bound_map = {} # Mapear o indice inferior de cada array
+        self.var_counter = 0 # Track the address to use for the next variable
+        self.var_map = {} # Map each variable to its memory address
+        self.var_type_map = {} # Map each variable to its type
+        self.array_lower_bound_map = {} # Map the lower bound index of each array
         self.label_count = 0
         self.loop_label_count = 0
         self.current_identation = 2
         self.output_functions = []
-        self.function_map = {}  # Mapear o tipo de retorno de cada função
-        self.is_function_scope = False  # Indica se estamos dentro de uma função
-        self.function_var_map = {}  # Mapear as variáveis locais de cada função
-        self.function_var_counter = 0  # Endereço das variáveis locais da função
-        self.function_var_type_map = {}  # Mapear o tipo de cada variável local da função
+        self.function_map = {}  # Map the return type of each function
+        self.is_function_scope = False  # Indicates if we are inside a function
+        self.function_var_map = {}  # Map local variables of each function
+        self.function_var_counter = 0  # Address of local variables in the function
+        self.function_var_type_map = {}  # Map the type of each local variable in the function
+        self.debug_mode = False  # Flag to enable debug mode
 
     def print_debug_info(self):
         print("=== Debug Information ===")
@@ -27,19 +28,19 @@ class CodeGenerator:
         print("Function Variable Type Map:", self.function_var_type_map)
         print("==========================")
 
-    def generate(self, ast_root):
+    def generate(self, ast_root, debug_mode=False):
+        if debug_mode:
+            self.debug_mode = True
         self.output.append("START\n")
         self._visit(ast_root)
         self.output.append("\nSTOP")
         return "\n".join(self.output + self.output_functions)
 
     def _get_variable_address(self, identifier_node):
-        """Determina o endereço da variável baseado no nome do identificador."""
         name = identifier_node.children[0]
-        return self.var_map.get(name, None) # Caso a variável não exista, retorna None para validar onde é chamada
+        return self.var_map.get(name, None) # If the variable does not exist, return None to validate where it is called
 
     def _get_variable_address_function(self, identifier_node):
-        """Determina o endereço da variável baseado no nome do identificador dentro de uma função."""
         name = identifier_node.children[0]
         return self.function_var_map.get(name, None)
 
@@ -64,146 +65,120 @@ class CodeGenerator:
         }.get(op, f"UNKNOWN_OP({op})")
 
     def _visit(self, node):
-        """Visita um nó e chama o método adequado de acordo com seu tipo."""
         if node is None:
             return
 
-        print(f"== Visiting node: {node.nodetype} ==")
+        if self.debug_mode:
+            print(f"== Visiting node: {node.nodetype} ==")
 
-        # Verifica se existe um método específico para o tipo de nó
         visit_method = getattr(self, f"_visit_{node.nodetype.lower()}", None)
         if visit_method:
             visit_method(node)
         else:
-            # Caso o tipo de nó não tenha um método específico, percorre seus filhos
+            # If the node type does not have a specific method, visit its children
             self._visit_children(node)
 
     def _visit_children(self, node):
-        """Visita todos os filhos de um nó."""
         for child in node.children:
             if isinstance(child, ASTNode):
                 self._visit(child)
 
     def _visit_program(self, node):
-        """Lida com o nó 'Program'."""
-        print("[DEBUG] Visiting program")
         self._visit_children(node)
 
     def _visit_header(self, node):
-        """Lida com o nó 'Header'."""
-        print("[DEBUG] Visiting header, ignoring")
-        pass # Não precisamos da informação do cabeçalho
+        pass # We don't need the header information
 
     def _visit_content(self, node):
-        """Lida com o nó 'Content'."""
-        print("[DEBUG] Visiting content")
         self._visit_children(node)
 
     def _visit_declarations(self, node):
-        """Lida com o nó 'Declarations'."""
-        print("[DEBUG] Visiting declarations")
         self.output.append(" " * self.current_identation + "// Variable declarations")
         self._visit_children(node)
 
     def _visit_vardeclaration(self, node):
-        """Lida com a declaração de variáveis."""
-        print("[DEBUG] Visiting variable declaration")
         for child in node.children:
             if child.nodetype == "ListVarDeclaration":
                 self._visit(child)
 
     def _visit_listvardeclaration(self, node):
-        """Lida com a lista de declarações de variáveis."""
-        print("[DEBUG] Visiting list variable declaration")
         for child in node.children:
             if child.nodetype == "VarElemDeclaration" or child.nodetype == "ListVarDeclaration":
                 self._visit(child)
 
     def _visit_varelemdeclaration(self, node):
-        """Lida com cada elemento da declaração de variável."""
-        print("[DEBUG] Visiting variable element declaration")
-
         if node.children[1].nodetype == "ArrayType":
             lower_bound = int(str(node.children[1].children[0].children[0].children[0].children[0].children[0]).strip())
             upper_bound = int(str(node.children[1].children[0].children[1].children[0].children[0].children[0]).strip())
 
             var_name = str(node.children[0].children[0].children[0]).strip()
             print(f"[DEBUG] Variable name: {var_name}")
-            self.var_map[var_name] = self.var_counter # Adiciona a variável ao mapa com o endereço atual
+            self.var_map[var_name] = self.var_counter # Add the variable to the map with the current address
             self.array_lower_bound_map[var_name] = lower_bound
             self.var_type_map[var_name] = node.children[1].children[0].nodetype
             self.output.append(" " * self.current_identation + f"PUSHI {upper_bound - lower_bound + 1}")
             self.output.append(" " * self.current_identation + f"ALLOCN // allocate array {var_name}")
-            if not self.is_function_scope:  # Se não estivermos dentro de uma função
+            if not self.is_function_scope:  # If we are not inside a function
                 self.output.append(" " * self.current_identation + f"STOREG {self.var_counter} // declare array {var_name}")
-            else:  # Se estivermos dentro de uma função, adiciona ao mapa de variáveis da função
+            else:  # If we are inside a function, add to the function variable map
                 self.output.append(" " * self.current_identation + f"STOREL {self.function_var_counter} // declare array {var_name} in function scope")
-            self.output.append("") # Adiciona uma nova linha para melhor legibilidade
-            self.var_counter += 1  # Incrementa o contador para a próxima variável
+            self.output.append("") # Add a new line for better readability
+            self.var_counter += 1  # Increment the counter for the next variable
         elif node.children[1].children[0].nodetype == "string":
             var_name = str(node.children[0].children[0].children[0]).strip()
             self.var_map[var_name] = self.var_counter
             self.var_type_map[var_name] = "string"
             self.output.append(" " * self.current_identation + f"PUSHS \"\" // initialize string {var_name}")
-            if not self.is_function_scope:  # Se não estivermos dentro de uma função
+            if not self.is_function_scope:  # If we are not inside a function
                 self.output.append(" " * self.current_identation + f"STOREG {self.var_counter} // declare string {var_name}")
-            else:  # Se estivermos dentro de uma função, adiciona ao mapa de variáveis da função
+            else:  # If we are inside a function, add to the function variable map
                 self.output.append(" " * self.current_identation + f"STOREL {self.function_var_counter} // declare string {var_name} in function scope")
-            self.output.append("") # Adiciona uma nova linha para melhor legibilidade
-            self.var_counter += 1  # Incrementa o contador para a próxima variável
+            self.output.append("") # Add a new line for better readability
+            self.var_counter += 1  # Increment the counter for the next variable
         else:
             for child in node.children:
                 if child.nodetype == "IdentifierList":
                     self._visit(child)
                 elif child.nodetype == "Type":
-                    pass # Não precisamos da informação do tipo das variáveis, for preciso, temos de criar um visit novo para isso
+                    pass # We don't need the type information of the variables, if needed, we have to create a new visit for that
 
     def _visit_identifierlist(self, node):
-        """Lida com a lista de identificadores."""
-        print("[DEBUG] Visiting identifier list")
         for child in node.children:
-            if child.nodetype == "Identifier": # Tem de ser tratador aqui porque é onde sabemos que é uma variável
+            if child.nodetype == "Identifier": # It has to be handled here because this is where we know it's a variable
                 var_name = str(child.children[0]).strip()
-                if not self.is_function_scope:  # Se não estivermos dentro de uma função
-                    self.var_map[var_name] = self.var_counter # Adiciona a variável ao mapa com o endereço atual
+                if not self.is_function_scope:  # If we are not inside a function
+                    self.var_map[var_name] = self.var_counter # Add the variable to the map with the current address
                     self.var_type_map[var_name] = "integer"
-                    self.output.append(" " * self.current_identation +  f"PUSHI 0 //initialize {var_name}")  # Inicializa a variável com 0
-                    self.output.append(" " * self.current_identation +  f"STOREG {self.var_counter} //declare {var_name}")  # Adiciona a variável à saída
-                    self.output.append("") # Adiciona uma nova linha para melhor legibilidade
-                    self.var_counter += 1  # Incrementa o contador para a próxima variável
-                else:  # Se estivermos dentro de uma função, adiciona ao mapa de variáveis da função
+                    self.output.append(" " * self.current_identation +  f"PUSHI 0 //initialize {var_name}")  # Initialize the variable with 0
+                    self.output.append(" " * self.current_identation +  f"STOREG {self.var_counter} //declare {var_name}")  # Add the variable to the output
+                    self.output.append("") # Add a new line for better readability
+                    self.var_counter += 1  # Increment the counter for the next variable
+                else:  # If we are inside a function, add to the function variable map
                     if var_name not in self.function_var_map:
-                        self.function_var_map[var_name] = self.function_var_counter  # Adiciona a variável ao mapa com o endereço atual
+                        self.function_var_map[var_name] = self.function_var_counter  # Add the variable to the map with the current address
                         self.function_var_type_map[var_name] = "integer"
                         self.output.append(" " * self.current_identation + f"PUSHI 0 //initialize {var_name} in function scope")
                         self.output.append(" " * self.current_identation + f"STOREL {self.function_var_counter} //declare {var_name} in function scope")
-                        self.output.append("")  # Adiciona uma nova linha para melhor legibilidade
-                        self.function_var_counter += 1  # Incrementa o contador para a próxima variável da função
+                        self.output.append("")  # Add a new line for better readability
+                        self.function_var_counter += 1  # Increment the counter for the next function variable
 
 
     def _visit_compoundstatement(self, node):
-        """Lida com o nó 'CompoundStatement'."""
-        print("[DEBUG] Visiting compound statement")
         self.output.append(" " * self.current_identation + "// Start of compound statement (BEGIN ... END)")
         self._visit_children(node)
 
     def _visit_liststatement(self, node):
-        print("[DEBUG] Visiting list statement")
         self._visit_children(node)
 
     def _visit_liststatementaux(self, node):
-        print("[DEBUG] Visiting list statement auxiliary")
         self._visit_children(node)
 
     def _visit_statement(self, node):
-        """Lida com o nó 'Statement'."""
-        print("[DEBUG] Visiting statement")
         self._visit_children(node)
 
     def _visit_procedurecall(self, node):
-        """Lida com a chamada de procedimento (ex: Write, ReadLn)."""
-        identifier = node.children[0]  # Primeiro filho é o identificador (Write, ReadLn, etc.)
-        if identifier.nodetype == "Identifier": # Tem de ser tratado aqui porque é onde sabemos que é uma função
+        identifier = node.children[0]  # First child is the identifier (Write, ReadLn, etc.)
+        if identifier.nodetype == "Identifier": # It has to be handled here because this is where we know it's a function
             procedure_name = str(identifier.children[0]).strip().lower()
             if procedure_name == "write":
                 self._visit_procedurewrite(node)
@@ -213,25 +188,22 @@ class CodeGenerator:
                 self._visit_procedurewriteln(node)
 
     def _visit_procedurewrite(self, node):
-        """Lida com a chamada de 'Write'."""
-        self._visit_children(node)  # Visita os filhos (como o argumento)
+        self._visit_children(node)  # Visit children (such as the argument)
         self.output.append(" " * self.current_identation + "WRITES")
 
     def _visit_procedurereadln(self, node):
-        """Lida com a chamada de 'ReadLn'."""
-        print("[DEBUG] Visiting procedure input")
-        self._visit_children(node)  # Visita os filhos (como o argumento)
+        self._visit_children(node)  # Visit children (such as the argument)
         var_name = str(node.children[1].children[0].children[0].children[0].children[0].children[0].children[0].children[0].children[0]).strip()
 
-        if len(node.children[1].children[0].children[0].children[0].children[0].children[0].children[0].children) > 1: # Se for um array, tem de fazer a diferença para o lower bound e ir buscar o indice
+        if len(node.children[1].children[0].children[0].children[0].children[0].children[0].children[0].children) > 1: # If it is an array, must adjust for lower bound and get the index
             position_name = node.children[1].children[0].children[0].children[0].children[0].children[0].children[0].children[1].children[0].children[0].children[0].children[0].children[0].children[0].children[0]
             if not self.is_function_scope:
                 self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[var_name]}")
-            else:  # Se estivermos dentro de uma função, adiciona ao mapa de variáveis da função
+            else:  # If we are inside a function, add to the function variable map
                 self.output.append(" " * self.current_identation + f"PUSHL {self.function_var_map[var_name]}")
-            if not self.is_function_scope:  # Se não estivermos dentro de uma função
+            if not self.is_function_scope:  # If we are not inside a function
                 self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[position_name]}")
-            else:  # Se estivermos dentro de uma função, adiciona ao mapa de variáveis da função
+            else:  # If we are inside a function, add to the function variable map
                 self.output.append(" " * self.current_identation + f"PUSHL {self.function_var_map[position_name]}")
             self.output.append(" " * self.current_identation + f"// Adapt array index to lower bound")
             if not (self.array_lower_bound_map.get(var_name) is None):
@@ -247,9 +219,9 @@ class CodeGenerator:
             if not (self.var_type_map.get(var_name) == "string"):
                 self.output.append(" " * self.current_identation + "ATOI")
 
-            if not self.is_function_scope:  # Se não estivermos dentro de uma função
+            if not self.is_function_scope:  # If we are not inside a function
                 self.output.append(" " * self.current_identation + f"STOREG {self.var_map[var_name]}")
-            else:  # Se estivermos dentro de uma função, adiciona ao mapa de variáveis da função
+            else:  # If we are inside a function, add to the function variable map
                 self.output.append(" " * self.current_identation + f"STOREL {self.function_var_map[var_name]}")
 
     def _visit_procedurewriteln(self, node):
@@ -264,21 +236,17 @@ class CodeGenerator:
         self.output.append(" " * self.current_identation + "WRITELN")
 
     def _is_string(self, node):
-        print("[DEBUG] Checking if node is a string")
         if node.children[0].children[0].children[0].children[0].children[0].nodetype == "UnsignedConstant":
             return node.children[0].children[0].children[0].children[0].children[0].children[0].nodetype == "String"
         return False
 
     def _visit_structeredstatement(self, node):
-        print("[DEBUG] Visiting structured statement")
         self._visit_children(node)
 
     def _visit_conditionalstatement(self, node):
-        print("[DEBUG] Visiting conditional statement")
         self._visit_children(node)
 
     def _visit_ifstatement(self, node):
-        print("[DEBUG] Visiting if statement")
         condition_node = node.children[0]
         then_block = node.children[1]
         else_block = node.children[2] if len(node.children) > 2 else None
@@ -303,15 +271,12 @@ class CodeGenerator:
         self.output.append(" " * self.current_identation + f"{end_label}:")
 
     def _visit_simplestatement(self, node):
-        print("[DEBUG] Visiting simple statement")
         self._visit_children(node)
 
     def _visit_operator(self, node):
-        print("[DEBUG] Visiting operator")
         self._visit_children(node)
 
     def _visit_relationaloperator(self, node):
-        print("[DEBUG] Visiting relational operator")
         op = node.children[0]
         if op == "<>":
             self.output.append(" " * self.current_identation + "NEQ")
@@ -325,7 +290,6 @@ class CodeGenerator:
             self.output.append(" " * self.current_identation + "SUPEQ")
 
     def _visit_firstpriorityoperator(self, node):
-        print("[DEBUG] Visiting first priority operator")
         op = str(node.children[0]).strip().lower()
         if op == "*":
             self.output.append(" " * self.current_identation + "MUL")
@@ -339,18 +303,15 @@ class CodeGenerator:
             self.output.append(" " * self.current_identation + "AND")
 
     def _visit_secondpriorityoperator(self, node):
-        print("[DEBUG] Visiting second priority operator")
         if node.children[0] == "+":
             self.output.append(" " * self.current_identation + "ADD")
         elif node.children[0] == "-":
             self.output.append(" " * self.current_identation + "SUB")
 
     def _visit_else(self, node):
-        """Lida com o bloco do 'else'."""
         self._visit_children(node)
 
     def _visit_expression(self, node):
-        print("[DEBUG] Visiting expression")
         if len(node.children) == 1:
             self._visit(node.children[0])
         else:
@@ -359,7 +320,6 @@ class CodeGenerator:
             self.output.append(" " * self.current_identation + self._get_operator(node.children[1].children[0].children[0]))
 
     def _visit_simpleexpression(self, node):
-        print("[DEBUG] Visiting simple expression")
         if len(node.children) == 1:
             self._visit(node.children[0])
         else:
@@ -368,12 +328,11 @@ class CodeGenerator:
             self.output.append(" " * self.current_identation + self._get_operator(node.children[1].children[0].children[0]))
 
     def _visit_assignment(self, node):
-        print("[DEBUG] Visiting assignment")
         destination = node.children[0].children[0].children[0]
 
-        # Verificar se o destination é o mesmo nome que uma função, se sim, é um return
+        # Check if the destination is the same name as a function, if so, it's a return
         is_function_destination = False
-        # ver se o destination é uma função
+        # Check if the destination is a function
         if destination in self.function_map:
             is_function_destination = True
 
@@ -395,11 +354,11 @@ class CodeGenerator:
         self.output.append(" " * self.current_identation + f"// Assignment: {destination} := {source}")
         if source is None:
             pass
-        elif is_function_destination:  # Se for um return de uma função, tem de ser tratado de forma diferente
+        elif is_function_destination:  # If it's a function return, it must be handled differently
             if self.function_map[destination] == "integer":
-                if not self.is_function_scope:  # Se não estivermos dentro de uma função
+                if not self.is_function_scope:  # If we are not inside a function
                     self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[source]}")
-                else:  # Se estivermos dentro de uma função, adiciona ao mapa de variáveis da função
+                else:  # If we are inside a function, add to the function variable map
                     self.output.append(" " * self.current_identation + f"PUSHL {self.function_var_map[source]}")
             elif self.function_map[destination] == "string":
                 self.output.append(" " * self.current_identation + f"PUSHS {self.var_map[source]}")
@@ -409,10 +368,9 @@ class CodeGenerator:
             if source == "false":
                 self.output.append(" " * self.current_identation + "PUSHI 0")
         elif node.children[1].children[0].children[0].children[0].children[0].children[0].nodetype == "Num_Int":
-            self.output.append(" " * self.current_identation + f"PUSHI {source}")  # Pega no valor do número
+            self.output.append(" " * self.current_identation + f"PUSHI {source}")  # Get the value of the number
         else:
             if is_function_source:
-                print(f"DDDDDDDDDDDDDDDDDDDDDDDDDDD {node.children[1].children[0].children[0].children[0].children[0].children[1].children}")
                 for param in node.children[1].children[0].children[0].children[0].children[0].children[1].children:
                     parameter = str(param.children[0].children[0].children[0].children[0].children[0].children[0].children[0])
                     self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[parameter]}")
@@ -420,18 +378,17 @@ class CodeGenerator:
                     self.output.append(" " * self.current_identation + f"CALL")
             else:
                 if not self.is_function_scope:
-                    self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[source]}")  # Pega no valor da variável
-                else:  # Se estivermos dentro de uma função, adiciona ao mapa de variáveis da função
-                    self.output.append(" " * self.current_identation + f"PUSHL {self.function_var_map[source]}")  # Pega no valor da variável local
+                    self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[source]}")  # Get the value of the variable
+                else:  # If we are inside a function, add to the function variable map
+                    self.output.append(" " * self.current_identation + f"PUSHL {self.function_var_map[source]}")  # Get the value of the local variable
 
         if not is_function_destination:
-            if not self.is_function_scope:  # Se estivermos dentro de uma função, adiciona ao mapa de variáveis da função
-                self.output.append(" " * self.current_identation + f"STOREG {self.var_map[destination]}")  # Armazena o valor na variável de destino
-            else:  # Se não estivermos dentro de uma função
-                self.output.append(" " * self.current_identation + f"STOREL {self.function_var_map[destination]}")  # Armazena o valor na variável local de destino
+            if not self.is_function_scope:  # If we are inside a function, add to the function variable map
+                self.output.append(" " * self.current_identation + f"STOREG {self.var_map[destination]}")  # Store the value in the destination variable
+            else:  # If we are not inside a function
+                self.output.append(" " * self.current_identation + f"STOREL {self.function_var_map[destination]}")  # Store the value in the local destination variable
 
     def _visit_term(self, node):
-        print("[DEBUG] Visiting term")
         if len(node.children) == 1:
             self._visit(node.children[0])
         else:
@@ -440,22 +397,18 @@ class CodeGenerator:
             self.output.append(" " * self.current_identation + self._get_operator(node.children[1].children[0].children[0]))
 
     def _visit_factor(self, node):
-        """Lida com o nó 'Factor'."""
         self._visit_children(node)
 
     def _visit_functioncall(self, node):
-        """Lida com a chamada de função."""
-        print("[DEBUG] Visiting function call")
         identifier = node.children[0]
-        if identifier.nodetype == "Identifier":  # Tem de ser tratado aqui porque é onde sabemos que é uma função
+        if identifier.nodetype == "Identifier":  # It has to be handled here because this is where we know it's a function
             function_name = str(identifier.children[0]).strip().lower()
             if function_name == "length":
                 self.output.append(" " * self.current_identation + "// Function call: Length")
-                self._visit(node.children[1])  # Visita os argumentos da função
+                self._visit(node.children[1])  # Visit the function arguments
                 self.output.append(" " * self.current_identation + "STRLEN")
 
     def _visit_unsignedconstant(self, node):
-        """Lida com o nó 'UnsignedConstant' (para strings)."""
         for child in node.children:
             if child.nodetype == "String":
                 self.output.append(" " * self.current_identation + f'PUSHS "{child.children[0]}"')
@@ -466,18 +419,14 @@ class CodeGenerator:
                 self.output.append(" " * self.current_identation + "CHRCODE")
 
     def _visit_variable(self, node):
-        """Lida com o nó 'Variable' (para variáveis como num1, num2, etc.)."""
-        # [TODO] Verificar se é uma variável ou um array
-        print("[DEBUG] Visiting variable")
-
-        if len(node.children) > 1: # Se for um array, tem de fazer a diferença para o lower bound e ir buscar o indice
+        if len(node.children) > 1: # If it is an array, must adjust for lower bound and get the index
             position_name = str(node.children[1].children[0].children[0].children[0].children[0].children[0].children[0].children[0]).strip()
             var_name = str(node.children[0].children[0]).strip()
 
             if not self.is_function_scope:
                 self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[var_name]}")
                 self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[position_name]}")
-            else:  # Se estivermos dentro de uma função, adiciona ao mapa de variáveis da função
+            else:  # If we are inside a function, add to the function variable map
                 self.output.append(" " * self.current_identation + f"PUSHL {self.function_var_map[var_name]}")
                 self.output.append(" " * self.current_identation + f"PUSHL {self.function_var_map[position_name]}")
             self.output.append(" " * self.current_identation + f"// Adapt array index to lower bound")
@@ -493,24 +442,19 @@ class CodeGenerator:
         else:
             for child in node.children:
                 if child.nodetype == "Identifier":
-                    if not self.is_function_scope:  # Se não estivermos dentro de uma função
+                    if not self.is_function_scope:  # If we are not inside a function
                         variable_address = self._get_variable_address(child)
                         if variable_address is not None:
                             self.output.append(" " * self.current_identation + f"PUSHG {variable_address}")
-                    else:  # Se estivermos dentro de uma função, adiciona ao mapa de variáveis da função
+                    else:  # If we are inside a function, add to the function variable map
                         variable_address = self._get_variable_address_function(child)
                         if variable_address is not None:
                             self.output.append(" " * self.current_identation + f"PUSHL {variable_address}")
 
     def _visit_repetitivestatement(self, node):
-        """Lida com o nó 'RepetitiveStatement'."""
-        print("[DEBUG] Visiting repetitive statement")
         self._visit_children(node)
 
     def _visit_forstatement(self, node):
-        """Lida com o nó 'ForStatement'."""
-        print("[DEBUG] Visiting for statement")
-
         iterator_name = node.children[0].children[0].nodetype
         if node.children[2].children[0].children[0].children[0].children[0].nodetype == "FunctionCall":
             start_value = node.children[2].children[0].children[0].children[0].children[0]
@@ -528,26 +472,26 @@ class CodeGenerator:
         if isinstance(start_value, int):
             self.output.append(" " * self.current_identation + f"PUSHI {start_value}")
         else:
-            self._visit(start_value)  # Se for uma variável, visita o nó para obter o valor
+            self._visit(start_value)  # If it is a variable, visit the node to get the value
 
-        if not self.is_function_scope:  # Se não estivermos dentro de uma função
+        if not self.is_function_scope:  # If we are not inside a function
             self.output.append(" " * self.current_identation + f"STOREG {self.var_map[iterator_name]}")
-        else:  # Se estivermos dentro de uma função, adiciona ao mapa de variáveis da função
+        else:  # If we are inside a function, add to the function variable map
             self.output.append(" " * self.current_identation + f"STOREL {self.function_var_map[iterator_name]}")
         self.output.append(" " * self.current_identation + f"{init_label}:")
         self.current_identation += 2
 
-        if not self.is_function_scope:  # Se não estivermos dentro de uma função
+        if not self.is_function_scope:  # If we are not inside a function
             self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[iterator_name]}")
-        else:  # Se estivermos dentro de uma função, adiciona ao mapa de variáveis da função
+        else:  # If we are inside a function, add to the function variable map
             self.output.append(" " * self.current_identation + f"PUSHL {self.function_var_map[iterator_name]}")
 
         if isinstance(end_variable_name, int):
             self.output.append(" " * self.current_identation + f"PUSHI {end_variable_name}")
         else:
-            if not self.is_function_scope:  # Se não estivermos dentro de uma função
+            if not self.is_function_scope:  # If we are not inside a function
                 self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[end_variable_name]}")
-            else:  # Se estivermos dentro de uma função, adiciona ao mapa de variáveis da função
+            else:  # If we are inside a function, add to the function variable map
                 self.output.append(" " * self.current_identation + f"PUSHL {self.function_var_map[end_variable_name]}")
         if node.children[3] == "DownTo":
             self.output.append(" " * self.current_identation + f"SUPEQ")
@@ -555,22 +499,22 @@ class CodeGenerator:
             self.output.append(" " * self.current_identation + f"INFEQ")
         self.output.append(" " * self.current_identation + f"JZ {end_label}")
         self.output.append(" " * self.current_identation + f"// For statement body")
-        self._visit(node.children[6]) # Visita o corpo do loop
+        self._visit(node.children[6]) # Visit the loop body
         self.output.append(" " * self.current_identation + f"// End of for statement body")
         self.output.append("")
         self.output.append(" " * self.current_identation + f"// Increment iterator")
-        if not self.is_function_scope:  # Se não estivermos dentro de uma função
+        if not self.is_function_scope:  # If we are not inside a function
             self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[iterator_name]}")
-        else:  # Se estivermos dentro de uma função, adiciona ao mapa de variáveis da função
+        else:  # If we are inside a function, add to the function variable map
             self.output.append(" " * self.current_identation + f"PUSHL {self.function_var_map[iterator_name]}")
         self.output.append(" " * self.current_identation + f"PUSHI 1")
         if node.children[3] == "DownTo":
             self.output.append(" " * self.current_identation + f"SUB")
         else:
             self.output.append(" " * self.current_identation + f"ADD")
-        if not self.is_function_scope:  # Se não estivermos dentro de uma função
+        if not self.is_function_scope:  # If we are not inside a function
             self.output.append(" " * self.current_identation + f"STOREG {self.var_map[iterator_name]}")
-        else:  # Se estivermos dentro de uma função, adiciona ao mapa de variáveis da função
+        else:  # If we are inside a function, add to the function variable map
             self.output.append(" " * self.current_identation + f"STOREL {self.function_var_map[iterator_name]}")
 
         self.output.append(" " * self.current_identation + f"JUMP {init_label}")
@@ -581,9 +525,6 @@ class CodeGenerator:
         self.output.append("")
 
     def _visit_whilestatement(self, node):
-        """Lida com o nó 'WhileStatement'."""
-        print("[DEBUG] Visiting while statement")
-
         start_label = f"WHILE{self.loop_label_count}"
         end_label = f"ENDWHILE{self.loop_label_count}"
         self.loop_label_count += 1
@@ -591,7 +532,7 @@ class CodeGenerator:
         self.output.append(" " * self.current_identation + f"{start_label}:")
 
         self.current_identation += 2
-        self._visit(node.children[0])  # Condição do while
+        self._visit(node.children[0])  # While condition
         self.output.append(" " * self.current_identation + f"JZ {end_label}")
         self.output.append(" " * self.current_identation + f"// While statement body")
         self._visit(node.children[2])
@@ -601,8 +542,6 @@ class CodeGenerator:
         self.output.append(" " * self.current_identation + f"{end_label}:")
 
     def _visit_functiondeclaration(self, node):
-        """Lida com a declaração de função."""
-        print("[DEBUG] Visiting function declaration")
         function_name = str(node.children[0].children[0]).strip()
         self.output_functions.append("")
         self.output_functions.append(f"{function_name}:")
@@ -619,8 +558,8 @@ class CodeGenerator:
             for i, param in enumerate(parameters):
                 param_name = str(param.children[0].children[0].children[0]).strip()
 
-                # Calcular o índice negativo correspondente
-                param_index = i - parameters_length  # Isso dá -3, -2, -1 para 3 parâmetros
+                # Calculate the corresponding negative index
+                param_index = i - parameters_length  # This gives -3, -2, -1 for 3 parameters
 
                 self.function_var_map[param_name] = self.function_var_counter
                 self.function_var_type_map[param_name] = (param.children[1].children[0].strip().lower() if len(param.children) > 1 else "void")
@@ -644,17 +583,17 @@ class CodeGenerator:
             line = self.output[i]
 
             if line.startswith(indent_str):
-                # Começa a recolher grupo de linhas (com indentação e linhas em branco ao redor)
-                # Verifica se tem linhas em branco antes
+                # Start collecting group of lines (with indentation and blank lines around)
+                # Check if there are blank lines before
                 if i > 0 and self.output[i-1].strip() == '':
                     lines_to_move.append(self.output[i-1])
-                    new_output = new_output[:-1]  # Remove a linha em branco que já foi adicionada
+                    new_output = new_output[:-1]  # Remove the blank line that has already been added
 
-                # Recolhe as linhas com indentação e as linhas em branco seguintes
+                # Collect the lines with indentation and the following blank lines
                 while i < len(self.output) and (self.output[i].startswith(indent_str) or self.output[i].strip() == ''):
                     lines_to_move.append(self.output[i])
                     i += 1
-                # Não incrementa i aqui pois já foi incrementado no while interno
+                # Do not increment i here because it has already been incremented in the inner while
                 continue
             else:
                 new_output.append(line)
