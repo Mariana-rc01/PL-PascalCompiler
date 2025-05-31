@@ -803,3 +803,465 @@ def test_procedure_declaration():
     )
     assert result == expected
 
+def test_function():
+    code = """
+        program VerifyHello;
+        var
+            palavra: string;
+
+        function Hello(s: string): boolean;
+        begin
+            Hello := s = 'Hello';
+        end;
+
+        begin
+            writeln('Escreve uma palavra:');
+            readln(palavra);
+            if Hello(palavra) then
+                writeln('Disseste Hello!')
+            else
+                writeln('Não disseste Hello...');
+        end.
+    """
+    result = parser.parse(code)
+    expected = ASTNode(
+        'Program', [
+            ASTNode(
+                'Header', [
+                    ASTNode(
+                        'Identifier', [
+                            ASTNode('VerifyHello', [])
+                        ]
+                    )
+                ]
+            ),
+            ASTNode(
+                'Content', [
+                    ASTNode(
+                        'Declarations', [
+                            ASTNode(
+                                'Declarations', [
+                                    None,
+                                    ASTNode(
+                                        'VarDeclaration', [
+                                            ASTNode(
+                                                'ListVarDeclaration', [
+                                                    ASTNode(
+                                                        'VarElemDeclaration', [
+                                                            ASTNode(
+                                                                'IdentifierList', [
+                                                                    ASTNode(
+                                                                        'Identifier', [
+                                                                            ASTNode('palavra', [])
+                                                                        ]
+                                                                    )
+                                                                ]
+                                                            ),
+                                                            ASTNode(
+                                                                'Type', [
+                                                                    ASTNode('string', [])
+                                                                ]
+                                                            )
+                                                        ]
+                                                    )
+                                                ]
+                                            )
+                                        ]
+                                    )
+                                ]
+                            ),
+                            ASTNode(
+                                'FunctionDeclaration', [
+                                    ASTNode('Identifier', ['Hello']),
+                                    ASTNode(
+                                        'ListParametersDeclaration', [
+                                            ASTNode(
+                                                'Parameters', [
+                                                    ASTNode(
+                                                        'Parameter', [
+                                                            ASTNode(
+                                                                'IdentifierList', [
+                                                                    ASTNode(
+                                                                        'Identifier', [
+                                                                            ASTNode('s', [])
+                                                                        ]
+                                                                    )
+                                                                ]
+                                                            ),
+                                                            ASTNode('Type', ['string'])
+                                                        ]
+                                                    )
+                                                ]
+                                            )
+                                        ]
+                                    ),
+                                    ASTNode('ReturnType', ['boolean']),
+                                    ASTNode(
+                                        'Content', [
+                                            None,
+                                            ASTNode(
+                                                'CompoundStatement', [
+                                                    ASTNode(
+                                                        'ListStatement', [
+                                                            ASTNode(
+                                                                'ListStatementAux', [
+                                                                    None,
+                                                                    ASTNode(
+                                                                        'Statement', [
+                                                                            ASTNode(
+                                                                                'SimpleStatement', [
+                                                                                    ASTNode(
+                                                                                        'Assignment', [
+                                                                                            ASTNode(
+                                                                                                'Variable', [
+                                                                                                    ASTNode('Identifier', ['Hello'])
+                                                                                                ]
+                                                                                            ),
+                                                                                            ASTNode(
+                                                                                                'Expression', [
+                                                                                                    ASTNode(
+                                                                                                        'SimpleExpression', [
+                                                                                                            ASTNode(
+                                                                                                                'Term', [
+                                                                                                                    ASTNode(
+                                                                                                                        'Factor', [
+                                                                                                                            ASTNode(
+                                                                                                                                'Variable', [
+                                                                                                                                    ASTNode('Identifier', ['s'])
+                                                                                                                                ]
+                                                                                                                            )
+                                                                                                                        ]
+                                                                                                                    )
+                                                                                                                ]
+                                                                                                            )
+                                                                                                        ]
+                                                                                                    ),
+                                                                                                    ASTNode(
+                                                                                                        'Operator', [
+                                                                                                            ASTNode('RelationalOperator', ['='])
+                                                                                                        ]
+                                                                                                    ),
+                                                                                                    ASTNode(
+                                                                                                        'Expression', [
+                                                                                                            ASTNode(
+                                                                                                                'SimpleExpression', [
+                                                                                                                    ASTNode(
+                                                                                                                        'Term', [
+                                                                                                                            ASTNode(
+                                                                                                                                'Factor', [
+                                                                                                                                    ASTNode(
+                                                                                                                                        'UnsignedConstant', [
+                                                                                                                                            ASTNode('String', ['Hello'])
+                                                                                                                                        ]
+                                                                                                                                    )
+                                                                                                                                ]
+                                                                                                                            )
+                                                                                                                        ]
+                                                                                                                    )
+                                                                                                                ]
+                                                                                                            )
+                                                                                                        ]
+                                                                                                    )
+                                                                                                ]
+                                                                                            )
+                                                                                        ]
+                                                                                    )
+                                                                                ]
+                                                                            )
+                                                                        ]
+                                                                    )
+                                                                ]
+                                                            ),
+                                                            None
+                                                        ]
+                                                    )
+                                                ]
+                                            )
+                                        ]
+                                    )
+                                ]
+                            )
+                        ]
+                    ),
+                    ASTNode(
+                        'CompoundStatement', [
+                            ASTNode(
+                                'ListStatement', [
+                                    ASTNode(
+                                        'ListStatementAux', [
+                                            ASTNode(
+                                                'ListStatementAux', [
+                                                    ASTNode(
+                                                        'ListStatementAux', [
+                                                            None,
+                                                            ASTNode(
+                                                                'Statement', [
+                                                                    ASTNode(
+                                                                        'SimpleStatement', [
+                                                                            ASTNode(
+                                                                                'ProcedureCall', [
+                                                                                    ASTNode(
+                                                                                        'Identifier', [
+                                                                                            ASTNode('writeln', [])
+                                                                                        ]
+                                                                                    ),
+                                                                                    ASTNode(
+                                                                                        'ListArgs', [
+                                                                                            ASTNode(
+                                                                                                'Arg', [
+                                                                                                    ASTNode(
+                                                                                                        'Expression', [
+                                                                                                            ASTNode(
+                                                                                                                'SimpleExpression', [
+                                                                                                                    ASTNode(
+                                                                                                                        'Term', [
+                                                                                                                            ASTNode(
+                                                                                                                                'Factor', [
+                                                                                                                                    ASTNode(
+                                                                                                                                        'UnsignedConstant', [
+                                                                                                                                            ASTNode('String', ['Escreve uma palavra:'])
+                                                                                                                                        ]
+                                                                                                                                    )
+                                                                                                                                ]
+                                                                                                                            )
+                                                                                                                        ]
+                                                                                                                    )
+                                                                                                                ]
+                                                                                                            )
+                                                                                                        ]
+                                                                                                    )
+                                                                                                ]
+                                                                                            )
+                                                                                        ]
+                                                                                    )
+                                                                                ]
+                                                                            )
+                                                                        ]
+                                                                    )
+                                                                ]
+                                                            )
+                                                        ]
+                                                    ),
+                                                    ASTNode(
+                                                        'Statement', [
+                                                            ASTNode(
+                                                                'SimpleStatement', [
+                                                                    ASTNode(
+                                                                        'ProcedureCall', [
+                                                                            ASTNode(
+                                                                                'Identifier', [
+                                                                                    ASTNode('readln', [])
+                                                                                ]
+                                                                            ),
+                                                                            ASTNode(
+                                                                                'ListArgs', [
+                                                                                    ASTNode(
+                                                                                        'Arg', [
+                                                                                            ASTNode(
+                                                                                                'Expression', [
+                                                                                                    ASTNode(
+                                                                                                        'SimpleExpression', [
+                                                                                                            ASTNode(
+                                                                                                                'Term', [
+                                                                                                                    ASTNode(
+                                                                                                                        'Factor', [
+                                                                                                                            ASTNode(
+                                                                                                                                'Variable', [
+                                                                                                                                    ASTNode('Identifier', ['palavra'])
+                                                                                                                                ]
+                                                                                                                            )
+                                                                                                                        ]
+                                                                                                                    )
+                                                                                                                ]
+                                                                                                            )
+                                                                                                        ]
+                                                                                                    )
+                                                                                                ]
+                                                                                            )
+                                                                                        ]
+                                                                                    )
+                                                                                ]
+                                                                            )
+                                                                        ]
+                                                                    )
+                                                                ]
+                                                            )
+                                                        ]
+                                                    )
+                                                ]
+                                            ),
+                                            ASTNode(
+                                                'Statement', [
+                                                    ASTNode(
+                                                        'StructeredStatement', [
+                                                            ASTNode(
+                                                                'ConditionalStatement', [
+                                                                    ASTNode(
+                                                                        'IfStatement', [
+                                                                            ASTNode(
+                                                                                'Expression', [
+                                                                                    ASTNode(
+                                                                                        'SimpleExpression', [
+                                                                                            ASTNode(
+                                                                                                'Term', [
+                                                                                                    ASTNode(
+                                                                                                        'Factor', [
+                                                                                                            ASTNode(
+                                                                                                                'FunctionCall', [
+                                                                                                                    ASTNode(
+                                                                                                                        'Identifier', [
+                                                                                                                            ASTNode('Hello', [])
+                                                                                                                        ]
+                                                                                                                    ),
+                                                                                                                    ASTNode(
+                                                                                                                        'ListArgs', [
+                                                                                                                            ASTNode(
+                                                                                                                                'Arg', [
+                                                                                                                                    ASTNode(
+                                                                                                                                        'Expression', [
+                                                                                                                                            ASTNode(
+                                                                                                                                                'SimpleExpression', [
+                                                                                                                                                    ASTNode(
+                                                                                                                                                        'Term', [
+                                                                                                                                                            ASTNode(
+                                                                                                                                                                'Factor', [
+                                                                                                                                                                    ASTNode(
+                                                                                                                                                                        'Variable', [
+                                                                                                                                                                            ASTNode('Identifier', ['palavra'])
+                                                                                                                                                                        ]
+                                                                                                                                                                    )
+                                                                                                                                                                ]
+                                                                                                                                                            )
+                                                                                                                                                        ]
+                                                                                                                                                    )
+                                                                                                                                                ]
+                                                                                                                                            )
+                                                                                                                                        ]
+                                                                                                                                    )
+                                                                                                                                ]
+                                                                                                                            )
+                                                                                                                        ]
+                                                                                                                    )
+                                                                                                                ]
+                                                                                                            )
+                                                                                                        ]
+                                                                                                    )
+                                                                                                ]
+                                                                                            )
+                                                                                        ]
+                                                                                    )
+                                                                                ]
+                                                                            ),
+                                                                            ASTNode(
+                                                                                'Statement', [
+                                                                                    ASTNode(
+                                                                                        'SimpleStatement', [
+                                                                                            ASTNode(
+                                                                                                'ProcedureCall', [
+                                                                                                    ASTNode(
+                                                                                                        'Identifier', [
+                                                                                                            ASTNode('writeln', [])
+                                                                                                        ]
+                                                                                                    ),
+                                                                                                    ASTNode(
+                                                                                                        'ListArgs', [
+                                                                                                            ASTNode(
+                                                                                                                'Arg', [
+                                                                                                                    ASTNode(
+                                                                                                                        'Expression', [
+                                                                                                                            ASTNode(
+                                                                                                                                'SimpleExpression', [
+                                                                                                                                    ASTNode(
+                                                                                                                                        'Term', [
+                                                                                                                                            ASTNode(
+                                                                                                                                                'Factor', [
+                                                                                                                                                    ASTNode(
+                                                                                                                                                        'UnsignedConstant', [
+                                                                                                                                                            ASTNode('String', ['Disseste Hello!'])
+                                                                                                                                                        ]
+                                                                                                                                                    )
+                                                                                                                                                ]
+                                                                                                                                            )
+                                                                                                                                        ]
+                                                                                                                                    )
+                                                                                                                                ]
+                                                                                                                            )
+                                                                                                                        ]
+                                                                                                                    )
+                                                                                                                ]
+                                                                                                            )
+                                                                                                        ]
+                                                                                                    )
+                                                                                                ]
+                                                                                            )
+                                                                                        ]
+                                                                                    )
+                                                                                ]
+                                                                            ),
+                                                                            ASTNode(
+                                                                                'Statement', [
+                                                                                    ASTNode(
+                                                                                        'SimpleStatement', [
+                                                                                            ASTNode(
+                                                                                                'ProcedureCall', [
+                                                                                                    ASTNode(
+                                                                                                        'Identifier', [
+                                                                                                            ASTNode('writeln', [])
+                                                                                                        ]
+                                                                                                    ),
+                                                                                                    ASTNode(
+                                                                                                        'ListArgs', [
+                                                                                                            ASTNode(
+                                                                                                                'Arg', [
+                                                                                                                    ASTNode(
+                                                                                                                        'Expression', [
+                                                                                                                            ASTNode(
+                                                                                                                                'SimpleExpression', [
+                                                                                                                                    ASTNode(
+                                                                                                                                        'Term', [
+                                                                                                                                            ASTNode(
+                                                                                                                                                'Factor', [
+                                                                                                                                                    ASTNode(
+                                                                                                                                                        'UnsignedConstant', [
+                                                                                                                                                            ASTNode('String', ['Não disseste Hello...'])
+                                                                                                                                                        ]
+                                                                                                                                                    )
+                                                                                                                                                ]
+                                                                                                                                            )
+                                                                                                                                        ]
+                                                                                                                                    )
+                                                                                                                                ]
+                                                                                                                            )
+                                                                                                                        ]
+                                                                                                                    )
+                                                                                                                ]
+                                                                                                            )
+                                                                                                        ]
+                                                                                                    )
+                                                                                                ]
+                                                                                            )
+                                                                                        ]
+                                                                                    )
+                                                                                ]
+                                                                            )
+                                                                        ]
+                                                                    )
+                                                                ]
+                                                            )
+                                                        ]
+                                                    )
+                                                ]
+                                            )
+                                        ]
+                                    ),
+                                    None
+                                ]
+                            )
+                        ]
+                    )
+                ]
+            )
+        ]
+    )
+    assert result == expected
+

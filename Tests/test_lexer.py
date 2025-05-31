@@ -265,3 +265,84 @@ def test_comments():
     ]
     assert tokens == expected
 
+
+def test_function():
+    code = """
+        program VerifyHello;
+        var
+            palavra: string;
+
+        function Hello(s: string): boolean;
+        begin
+            Hello := s = 'Hello';
+        end;
+
+        begin
+            writeln('Escreve uma palavra:');
+            readln(palavra);
+            if Hello(palavra) then
+                writeln('Disseste Hello!')
+            else
+                writeln('Não disseste Hello...');
+        end.
+    """
+    tokens = tokenize(code)
+    expected = [
+        ('PROGRAM', 'program'),
+        ('identifier', 'VerifyHello'),
+        (';', ';'),
+        ('VAR', 'var'),
+        ('identifier', 'palavra'),
+        ('COLON', ':'),
+        ('identifier', 'string'),
+        (';', ';'),
+        ('FUNCTION', 'function'),
+        ('identifier', 'Hello'),
+        ('(', '('),
+        ('identifier', 's'),
+        ('COLON', ':'),
+        ('identifier', 'string'),
+        (')', ')'),
+        ('COLON', ':'),
+        ('identifier', 'boolean'),
+        (';', ';'),
+        ('BEGIN', 'begin'),
+        ('identifier', 'Hello'),
+        ('ASSIGN', ':='),
+        ('identifier', 's'),
+        ('EQUAL', '='),
+        ('string', 'Hello'),
+        (';', ';'),
+        ('END', 'end'),
+        (';', ';'),
+        ('BEGIN', 'begin'),
+        ('identifier', 'writeln'),
+        ('(', '('),
+        ('string', 'Escreve uma palavra:'),
+        (')', ')'),
+        (';', ';'),
+        ('identifier', 'readln'),
+        ('(', '('),
+        ('identifier', 'palavra'),
+        (')', ')'),
+        (';', ';'),
+        ('IF', 'if'),
+        ('identifier', 'Hello'),
+        ('(', '('),
+        ('identifier', 'palavra'),
+        (')', ')'),
+        ('THEN', 'then'),
+        ('identifier', 'writeln'),
+         ('(', '('),
+        ('string', 'Disseste Hello!'),
+        (')', ')'),
+        ('ELSE', 'else'),
+        ('identifier', 'writeln'),
+        ('(', '('),
+        ('string', 'Não disseste Hello...'),
+        (')', ')'),
+        (';', ';'),
+        ('END', 'end'),
+        ('.', '.')
+    ]
+    assert tokens == expected

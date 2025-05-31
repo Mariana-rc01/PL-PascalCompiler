@@ -105,3 +105,28 @@ def test_procedure_declaration():
     result = parser.parse(code)
     assert analyzer.analyze(result) == []
     assert analyzer.errors == []
+
+def test_function():
+    code = """
+        program VerifyHello;
+        var
+            palavra: string;
+
+        function Hello(s: string): boolean;
+        begin
+            Hello := s = 'Hello';
+        end;
+
+        begin
+            writeln('Escreve uma palavra:');
+            readln(palavra);
+            if Hello(palavra) then
+                writeln('Disseste Hello!')
+            else
+                writeln('Não disseste Hello...');
+        end.
+    """
+    analyzer = SemanticAnalyzer()
+    result = parser.parse(code)
+    assert analyzer.analyze(result) == []
+    assert analyzer.errors == []
