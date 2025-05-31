@@ -19,7 +19,7 @@ class SemanticAnalyzer:
             self._visit(ast_node)
 
         return self.errors
-    
+
     def _initialize_builtins(self):
         self.symbol_table[0].update({
             'writeln': {
@@ -35,7 +35,7 @@ class SemanticAnalyzer:
                 'variadic': True
             }
         })
-    
+
     def _visit(self, node):
         # Dynamically dispatch to a specific visit method based on node type
         method_name = f'_visit_{node.nodetype}'
@@ -67,7 +67,7 @@ class SemanticAnalyzer:
         # Process parameters and add function to global scope
         param_list = self._process_parameters(params_node)
         return_type = return_type_node.lower()
-        self.symbol_table[0][func_name.lower()] = {
+        self.symbol_table[0][func_name] = {
             'type': 'function',
             'params': param_list,
             'return_type': return_type
@@ -91,8 +91,8 @@ class SemanticAnalyzer:
 
     def _visit_Program(self, node):
         declarations = node.children[1] if len(node.children) > 1 else None
-        subprograms = node.children[2] if len(node.children) > 2 else None
-        main_block = node.children[3] if len(node.children) > 3 else None
+        subprograms  = node.children[2] if len(node.children) > 2 else None
+        main_block   = node.children[3] if len(node.children) > 3 else None
 
         if declarations:
             self._visit(declarations)
@@ -104,7 +104,7 @@ class SemanticAnalyzer:
             self._visit(main_block)
 
     def _visit_FunctionCall(self, node):
-        func_name = str(node.children[0].children[0]).strip().lower()
+        func_name = str(node.children[0].children[0]).strip()
         args_node = node.children[1] if len(node.children) > 1 else None
         received_args = args_node.children if args_node else []
 
@@ -255,17 +255,21 @@ class SemanticAnalyzer:
                 self.errors.append(f"Incompatible type: '{var_type}' vs '{expr_type}'.")
 
     def _visit_ProcedureCall(self, node):
-        proc_name = str(node.children[0].children[0]).strip().lower()
+        proc_name = str(node.children[0].children[0]).strip()
         args_node = node.children[1] if len(node.children) > 1 else None
         received_args = args_node.children if args_node else []
 
         proc_info = self.symbol_table[0].get(proc_name)
+
+        if proc_name.lower() == 'readln' or proc_name.lower() == "writeln" or proc_name.lower() == "write" or proc_name.lower() == "read":
+            proc_info = self.symbol_table[0].get(proc_name.lower())
+
         if proc_info is None:
             self.errors.append(f"Procedure or function '{proc_name}' not declared.")
             return
 
         if proc_info.get('variadic'):
-            if proc_name == 'readln':
+            if proc_name.lower() == 'readln':
                 for i, arg_node in enumerate(received_args):
                     expr_node = arg_node.children[0].children[0].children[0].children[0].children[0] if arg_node.nodetype == 'Arg' else arg_node
                     if expr_node.nodetype != 'Variable':
@@ -274,7 +278,7 @@ class SemanticAnalyzer:
                         var_type = self._get_expression_type(expr_node)
                         if var_type is None:
                             self.errors.append(f"Undeclared variable in argument {i+1} of 'readln'.")
-            elif proc_name == 'writeln':
+            elif proc_name.lower() == 'writeln':
                 for i, arg_node in enumerate(received_args):
                     arg_type = self._get_expression_type(arg_node)
                     if arg_type is None:
@@ -296,6 +300,7 @@ class SemanticAnalyzer:
                 expected_type_str = expected_type.get('element_type', 'unknown')
             else:
                 expected_type_str = expected_type
+
 
             if arg_type != expected_type_str:
                 self.errors.append(
@@ -412,6 +417,8 @@ class SemanticAnalyzer:
                     if indices_node is None:
                         if var_info.get('element_type') == 'char':
                             return 'string'
+                        elif var_info.get('element_type') == 'integer':
+                            return 'integer'
                         else:
                             return None
 
@@ -434,7 +441,7 @@ class SemanticAnalyzer:
                     return var_info.lower()
 
                 return None
-                
+
         if node.nodetype == 'FunctionCall':
             self._visit_FunctionCall(node)
             func_name = str(node.children[0].children[0]).strip()
@@ -528,9 +535,15 @@ class SemanticAnalyzer:
             self.errors.append("Invalid type node in parameter declaration.")
             return None
         if type_node.nodetype == "ArrayType":
-            if len(type_node.children) >= 2:
-                base_type = type_node.children[1].children[0].nodetype.lower()
+            if len(type_node.children) == 2 and type_node.children[0].nodetype == "Bounds":
+                type_child = type_node.children[1]
+                base_type_node = type_child.children[0]
+                base_type = base_type_node.value
                 return {'type': 'array', 'element_type': base_type}
+            # array of type (array aberto)
+            elif len(type_node.children) == 1 and type_node.children[0].nodetype == "Type":
+                base_type_node = type_node.children[0].children[0]
+                return {'type': 'array', 'element_type': base_type_node}
             self.errors.append("Malformed array type.")
             return None
 
