@@ -150,7 +150,7 @@ T = { PROGRAM, VAR, COLON, OF, PROCEDURE, FUNCTION,
   WHILE, DO, FOR, TO, DOWNTO, EQUAL, GREATER_THAN,
   LESS_THAN, NOT_EQUAL, GREATER_THAN_EQUAL,
   LESS_THAN_EQUAL, OR, DIV, MOD, AND, NOT, TRUE, FALSE,
-  identifier, string, char, num_int, num_real
+  identifier, string, char, num_int, num_real,
   '(',')', ';', ',', '.', '[', ']', '+', '-', '*', '/'
 }
 ```
@@ -792,10 +792,10 @@ Este manual explica como utilizar as diferentes componentes do projeto: o **pars
 
 ### 1. Análise do Código Pascal
 
-Executa o parser sobre um ficheiro `.pas` e imprime no terminal se a análise léxica, sintática e semântica correu bem.
+Executa o parser sobre um ficheiro `.pas` e imprime no terminal o código máquina gerado caso a análise léxica, sintática e semântica tenham sido efetuadas com sucesso, caso contrário, indica o erro.
 
 ```bash
-python3 -m Compiler.parser < Tests/testN.pas
+python3 -m Compiler.parser < Examples/testN.pas
 ```
 
 ### 2. Visualização da AST com Interface Gráfica (Tkinter)
@@ -824,7 +824,7 @@ Corre todos os testes unitários definidos no diretório `Tests/`.
 pytest -v Tests/
 ```
 
-* **Antes de correr, é necessário confirmar que as dependências encontram-se todas instaladas:**
+* **Antes de correr, é necessário confirmar que as dependências se encontram todas instaladas:**
 
   ```bash
   pip install -r requirements.txt
