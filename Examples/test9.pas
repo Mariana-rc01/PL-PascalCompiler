@@ -1,17 +1,8 @@
-program VerifyHello;
-var
-    palavra: string;
-
-function Hello(s: string): boolean;
-begin
-    Hello := s = 'Hello';
-end;
-
-begin
-    writeln('Escreve uma palavra:');
-    readln(palavra);
-    if Hello(palavra) then
-        writeln('Disseste Hello!')
-    else
-        writeln('Não disseste Hello...');
-end.
+PROGraM HelloWorld;
+vaR
+    a : real;
+BEGin
+    a := (((4*2) / (3 + 1))) - 4;
+    writeln(a);
+    { tem de dar -2}
+enD.

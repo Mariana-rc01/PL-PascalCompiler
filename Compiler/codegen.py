@@ -374,8 +374,8 @@ class CodeGenerator:
                 for param in node.children[1].children[0].children[0].children[0].children[0].children[1].children:
                     parameter = str(param.children[0].children[0].children[0].children[0].children[0].children[0].children[0])
                     self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[parameter]}")
-                    self.output.append(" " * self.current_identation + f"PUSHA {str(source).strip()}")
-                    self.output.append(" " * self.current_identation + f"CALL")
+                self.output.append(" " * self.current_identation + f"PUSHA {str(source).strip()}")
+                self.output.append(" " * self.current_identation + f"CALL")
             else:
                 if not self.is_function_scope:
                     self.output.append(" " * self.current_identation + f"PUSHG {self.var_map[source]}")  # Get the value of the variable
@@ -555,19 +555,26 @@ class CodeGenerator:
 
         if parameters_length > 0:
             # add the parameters to the function variable map
+            parameters_length = sum(len(param.children[0].children) for param in parameters)
+            identifier_counter = 0
+
             for i, param in enumerate(parameters):
-                param_name = str(param.children[0].children[0].children[0]).strip()
+                identifier_list = param.children[0].children
+                param_type = param.children[1].children[0].strip().lower() if len(param.children) > 1 else "void"
 
-                # Calculate the corresponding negative index
-                param_index = i - parameters_length  # This gives -3, -2, -1 for 3 parameters
+                for identifier in identifier_list:
+                    param_name = str(identifier.children[0]).strip()
 
-                self.function_var_map[param_name] = self.function_var_counter
-                self.function_var_type_map[param_name] = (param.children[1].children[0].strip().lower() if len(param.children) > 1 else "void")
+                    param_index = -parameters_length + identifier_counter
 
-                self.output_functions.append(" " * self.current_identation + f"PUSHL {param_index} // parameter {param_name}")
-                self.output_functions.append(" " * self.current_identation + f"STOREL {self.function_var_counter} // store parameter {param_name} in function scope")
+                    self.function_var_map[param_name] = self.function_var_counter
+                    self.function_var_type_map[param_name] = param_type
 
-                self.function_var_counter += 1
+                    self.output_functions.append(" " * self.current_identation + f"PUSHL {param_index} // parameter {param_name}")
+                    self.output_functions.append(" " * self.current_identation + f"STOREL {self.function_var_counter} // store parameter {param_name} in function scope")
+
+                    self.function_var_counter += 1
+                    identifier_counter += 1
 
         self.output_functions.append(" " * self.current_identation + "// Function body")
         self.function_map[function_name] = (node.children[2].children[0]).strip().lower() if len(node.children) > 2 else "void"
