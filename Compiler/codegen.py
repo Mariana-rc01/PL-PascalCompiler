@@ -559,7 +559,7 @@ class CodeGenerator:
             identifier_counter = 0
 
             for i, param in enumerate(parameters):
-                identifier_list = param.children[0].children  # vários identificadores
+                identifier_list = param.children[0].children
                 param_type = param.children[1].children[0].strip().lower() if len(param.children) > 1 else "void"
 
                 for identifier in identifier_list:
