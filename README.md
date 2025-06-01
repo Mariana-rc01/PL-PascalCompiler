@@ -510,25 +510,113 @@ Durante a geração de código, são utilizadas diversas estruturas auxiliares p
 
 As operações aritméticas e relacionais são traduzidas para as instruções de máquina correspondentes, respeitando a **prioridade das operações**. Assim, operadores de primeira prioridade (como `*`, `/`, `div`, `mod`) são processados antes dos de segunda prioridade (`+`, `-`), e as operações relacionais (`=`, `<`, `>`, etc.) são avaliadas após as aritméticas. Para tal, o gerador de código utiliza uma abordagem recursiva, processando primeiro os operandos e, em seguida, aplicando o operador correspondente.
 
+```
+// Expression: (((4*2) / (3 + 1))) - 4
+PUSHI 4
+PUSHI 2
+MUL
+PUSHI 3
+PUSHI 1
+ADD
+DIV
+PUSHI 4
+SUB
+```
+
 ### Variáveis
 
 As variáveis são geridas através da estrutura que as mapeia para endereços de memória. Durante a geração de código, são emitidas instruções para carregar (`PUSHG` para variáveis globais ou `PUSHL` para variáveis locais) e armazenar (`STOREG` ou `STOREL`) valores nas respetivas posições de memória. A inicialização de variáveis é efetuada no momento da sua declaração, garantindo que todas as variáveis têm um valor definido antes de serem utilizadas.
+
+```
+// Global space
+PUSHI 0 // initialize
+STOREG 0 // declare
+//(...)
+PUSHG 0 // load global variable
+
+// Local space
+PUSHI 0 // initialize in function scope
+STOREL 1 // declare in function scope
+//(...)
+PUSHL 1 // load local variable
+```
 
 ### Arrays
 
 Os arrays são tratados de forma especial, sendo adaptados os índices para o limite inferior declarado. Para aceder a um elemento de um array, são geradas instruções para calcular o endereço correto, ajustando o índice fornecido pelo limite inferior e carregando o valor correspondente (`LOADN`). A declaração de arrays envolve a alocação de memória suficiente para armazenar todos os elementos, baseando-se no tipo base e nos limites superior e inferior.
 
+```
+// Array declaration
+PUSHI 5
+ALLOCN // allocate array
+STOREG 0 // declare array
+//(...)
+PUSHG 1
+// Adapt array index to lower bound
+PUSHI 1
+SUB
+LOADN // load array element
+```
+
 ### Ciclos
 
 A implementação de ciclos, nomeadamente `for` e `while`, recorre a instruções de salto condicional (`JZ`, `JUMP`) e a rótulos para controlar o fluxo de execução. No caso do ciclo `for`, são geridas as instruções para inicializar a variável de controlo, verificar a condição de continuação e atualizar o valor da variável após cada iteração. Para o ciclo `while`, é verificada a condição no início de cada iteração e efetuado o salto condicional para o final do ciclo caso a condição não seja satisfeita.
+
+```
+LOOP0:
+  // For statement initialization
+  PUSHG 1
+  PUSHG 0
+  INFEQ
+  JZ ENDLOOP0
+
+  // For statement body
+  // (...)
+  // End of for statement body
+
+  // Increment iterator
+  PUSHG 1
+  PUSHI 1
+  ADD
+  STOREG 1
+  JUMP LOOP0
+ENDLOOP0:
+  // End of for statement
+```
 
 ### Estruturas de Decisão
 
 As estruturas de decisão, como o `if-then-else`, são traduzidas utilizando instruções de salto condicional (`JZ` para saltar para o bloco `else` caso a condição seja falsa e `JUMP` para saltar para o final da estrutura após o bloco `then`). São gerados rótulos para marcar o início do bloco `else` e o final da estrutura de decisão, garantindo a correta execução do fluxo condicional.
 
+```
+PUSHG 0
+PUSHG 1
+SUP
+JZ ELSE0
+  // (...)
+  JUMP END0
+  ELSE0:
+  // (...)
+END0:
+```
+
 ### Implementação de Funções
 
 As funções são geridas através de uma estrutura que mapeia o nome da função ao seu tipo de retorno. Durante a chamada a uma função, são geradas instruções para carregar os argumentos na *stack* e efetuar a chamada (`CALL`). No corpo da função, os parâmetros são tratados como variáveis locais e alcançadas a partir da posição negativa relativa ao *frame pointer*, sendo carregados a partir da *stack* e armazenados nas posições correspondentes. A função termina com uma instrução `RETURN`, que retorna o controlo para o ponto de chamada.
+
+```
+PUSHG 0 // Load function argument
+PUSHA Function
+CALL
+// (...)
+Function:
+    PUSHL -1 // parameter
+    STOREL 0 // store parameter in function scope
+    // Function body
+    // (...)
+    // End of function body
+    RETURN
+```
 
 O gerador de código produz assim um conjunto de instruções que, quando executadas, replicam o comportamento do programa Pascal original, convertendo-o numa representação executável que respeita as regras semânticas e sintáticas da linguagem alvo.
 
