@@ -1,5 +1,7 @@
 # Relatório de Projeto: Compilador de Pascal
 
+## Grade: 20/20 :star:
+
 **Data:** 01/06/2025 | **Disciplina:** Processamento de Linguagens | **Curso:** Licenciatura em Engenharia Informática
 
 ### Autores
